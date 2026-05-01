@@ -9,6 +9,7 @@ import { ImpactCounter } from "@/components/impact-counter";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import MapComponent from "@/components/ui/map";
 import { formatTimestamp, timeFromNow } from "@/lib/utils";
 import { Package, CheckCircle, Clock, Plus, Bell } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +30,15 @@ export default function RestaurantDashboard() {
 
   const available = listings.filter((l) => l.status === "available").length;
   const matched = listings.filter((l) => ["matched", "pending", "collected"].includes(l.status)).length;
+
+  const mapMarkers = listings
+    .filter(l => l.location?.latitude && l.location?.longitude)
+    .map(l => ({
+      id: l.id,
+      lat: l.location!.latitude,
+      lng: l.location!.longitude,
+      title: `${l.totalServings} servings available`,
+    }));
 
   async function handleApproval(matchId: string, approved: boolean) {
     setApproving(matchId);
@@ -117,46 +127,61 @@ export default function RestaurantDashboard() {
       )}
 
       {/* Listings */}
-      <Card>
-        <CardHeader>
-          <h2 className="font-semibold text-slate-900">My Listings</h2>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />)}
-            </div>
-          ) : listings.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">No listings yet.</p>
-              <Link href="/restaurant/new-listing">
-                <Button variant="outline" className="mt-4">Add your first surplus listing</Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-50">
-              {listings.map((listing) => (
-                <div key={listing.id} className="py-4 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <StatusBadge status={listing.status} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-slate-900">My Listings</h2>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2].map((i) => <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />)}
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 text-sm">No listings yet.</p>
+                <Link href="/restaurant/new-listing">
+                  <Button variant="outline" className="mt-4">Add your first surplus listing</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-50 max-h-[400px] overflow-auto">
+                {listings.map((listing) => (
+                  <div key={listing.id} className="py-4 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <StatusBadge status={listing.status} />
+                      </div>
+                      <p className="text-sm font-medium text-slate-900">
+                        {listing.totalServings} servings ·{" "}
+                        {listing.foodItems.map((f) => f.name).join(", ")}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Expires {timeFromNow(listing.expiryTime)}
+                      </p>
                     </div>
-                    <p className="text-sm font-medium text-slate-900">
-                      {listing.totalServings} servings ·{" "}
-                      {listing.foodItems.map((f) => f.name).join(", ")}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Expires {timeFromNow(listing.expiryTime)}
-                    </p>
+                    <p className="text-xs text-slate-400">{formatTimestamp(listing.createdAt)}</p>
                   </div>
-                  <p className="text-xs text-slate-400">{formatTimestamp(listing.createdAt)}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-slate-900">Listing Locations</h2>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+               <div className="h-[400px] bg-slate-100 rounded-xl animate-pulse w-full"></div>
+            ) : (
+                <MapComponent markers={mapMarkers} height="400px" />
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

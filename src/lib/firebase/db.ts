@@ -103,6 +103,11 @@ export async function updateRequest(id: string, data: Partial<FoodRequest>) {
   await updateDoc(doc(db, COLLECTIONS.REQUESTS, id), data as DocumentData);
 }
 
+export async function getRequestById(id: string): Promise<FoodRequest | null> {
+  const s = await getDoc(doc(db, COLLECTIONS.REQUESTS, id));
+  return s.exists() ? ({ id: s.id, ...s.data() } as FoodRequest) : null;
+}
+
 export async function getPendingRequests(): Promise<FoodRequest[]> {
   const q = query(collection(db, COLLECTIONS.REQUESTS), where("status", "==", "pending"));
   const snapshot = await getDocs(q);
@@ -210,12 +215,15 @@ export async function getOpenEscalations(): Promise<Escalation[]> {
   return byCreatedAtDesc(snap<Escalation>(snapshot));
 }
 
-export function subscribeToEscalations(cb: (escalations: Escalation[]) => void) {
+export function subscribeToEscalations(
+  cb: (escalations: Escalation[]) => void,
+  onError?: (err: Error) => void
+) {
   const q = query(
     collection(db, COLLECTIONS.ESCALATIONS),
     where("status", "in", ["open", "escalated_to_admin"])
   );
-  return onSnapshot(q, (s) => cb(byCreatedAtDesc(snap<Escalation>(s))));
+  return onSnapshot(q, (s) => cb(byCreatedAtDesc(snap<Escalation>(s))), onError ?? (() => {}));
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
@@ -244,6 +252,14 @@ export function subscribeToNotifications(userId: string, cb: (n: Notification[])
 }
 
 // ── Agent Logging ─────────────────────────────────────────────────────────────
+export interface AgentLog {
+  id: string;
+  agent: string;
+  action: string;
+  context: Record<string, unknown>;
+  timestamp: Timestamp;
+}
+
 export async function logAgentDecision(
   agent: string,
   action: string,
@@ -255,4 +271,21 @@ export async function logAgentDecision(
     context,
     timestamp: serverTimestamp(),
   });
+}
+
+export function subscribeToAgentLogs(
+  cb: (logs: AgentLog[]) => void,
+  onError?: (err: Error) => void
+) {
+  const q = query(collection(db, COLLECTIONS.AGENT_LOGS), limit(50));
+  return onSnapshot(
+    q,
+    (s) => {
+      const logs = s.docs
+        .map((d) => ({ id: d.id, ...d.data() } as AgentLog))
+        .sort((a, b) => (b.timestamp?.toMillis?.() ?? 0) - (a.timestamp?.toMillis?.() ?? 0));
+      cb(logs);
+    },
+    onError ?? (() => {})
+  );
 }

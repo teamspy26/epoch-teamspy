@@ -13,9 +13,11 @@ import {
   updateListing,
   logAgentDecision,
   createNotification,
+  getRequestById,
 } from "@/lib/firebase/db";
 import type { FoodRequest, FoodListing, Match } from "@/lib/types";
 import { runSupplyAgent } from "./supply";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 const SLA_MINUTES = 5; // restaurant must respond within 5 min
 
@@ -65,7 +67,7 @@ export async function runCoordinatorAgent(request: FoodRequest): Promise<string 
     updateRequest(request.id, { status: "matched" }),
   ]);
 
-  // 4. Notify restaurant
+  // 4. Notify restaurant (in-app + WhatsApp)
   await createNotification({
     userId: listing.restaurantId,
     title: "Food request matched!",
@@ -74,8 +76,12 @@ export async function runCoordinatorAgent(request: FoodRequest): Promise<string 
     read: false,
     metadata: { matchId, requestId: request.id, listingId: listing.id },
   });
+  sendWhatsApp(
+    listing.restaurantPhone,
+    `🙏 Prasadam Alert: ${request.ngoName} needs ${request.servingsNeeded} servings of your surplus food. Please open the app to approve within ${SLA_MINUTES} minutes.`
+  ).catch(() => {});
 
-  // 5. Notify NGO
+  // 5. Notify NGO (in-app + WhatsApp)
   await createNotification({
     userId: request.ngoId,
     title: "Match found!",
@@ -84,6 +90,10 @@ export async function runCoordinatorAgent(request: FoodRequest): Promise<string 
     read: false,
     metadata: { matchId },
   });
+  sendWhatsApp(
+    request.ngoPhone,
+    `✨ Prasadam: Match found! ${listing.restaurantName} has ${listing.totalServings} servings available for you. Awaiting their approval. 🙏`
+  ).catch(() => {});
 
   await logAgentDecision("coordinator", "match_created", {
     matchId,
@@ -123,10 +133,28 @@ export async function handleRestaurantApproval(
     return;
   }
 
-  // Approved — trigger Dispatch agent
-  await updateMatch(matchId, {
-    status: "approved",
-    restaurantApprovalTime: Timestamp.now(),
+  // Approved — update match, request, notify NGO, trigger Dispatch
+  await Promise.all([
+    updateMatch(matchId, { status: "approved", restaurantApprovalTime: Timestamp.now() }),
+    updateRequest(match.requestId, { status: "approved", approvedByRestaurant: match.restaurantName }),
+  ]);
+
+  // Fetch request to get NGO phone for WhatsApp
+  const request = await getRequestById(match.requestId);
+  if (request?.ngoPhone) {
+    sendWhatsApp(
+      request.ngoPhone,
+      `✅ Approved by ${match.restaurantName}! Your request for ${request.servingsNeeded} servings has been confirmed. A volunteer is being assigned now. Dhanyavaad 🙏`
+    ).catch(() => {});
+  }
+
+  await createNotification({
+    userId: match.ngoId,
+    title: `Approved by ${match.restaurantName}`,
+    body: `Your food request has been approved. A volunteer is being assigned.`,
+    type: "approval",
+    read: false,
+    metadata: { matchId, restaurantName: match.restaurantName },
   });
 
   await logAgentDecision("coordinator", "match_approved", { matchId });

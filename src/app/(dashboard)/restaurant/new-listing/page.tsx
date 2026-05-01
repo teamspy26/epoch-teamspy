@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Timestamp } from "firebase/firestore";
 import { useAuth } from "@/context/auth-context";
-import { createListing } from "@/lib/firebase/db";
+import { createListing, getPendingRequests } from "@/lib/firebase/db";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -52,9 +52,10 @@ export default function NewListingPage() {
         new Date(Date.now() + parseFloat(expiryHours) * 60 * 60 * 1000)
       );
 
+      const restaurantName = appUser.orgName ?? appUser.name;
       await createListing({
         restaurantId: appUser.uid,
-        restaurantName: appUser.orgName ?? appUser.name,
+        restaurantName,
         restaurantPhone: appUser.phone,
         foodItems: validItems,
         totalServings: parseInt(totalServings),
@@ -63,6 +64,21 @@ export default function NewListingPage() {
         status: "available",
         notes: notes || undefined,
       });
+
+      // Notify NGOs with pending requests via WhatsApp (non-blocking)
+      getPendingRequests().then((pending) => {
+        const uniquePhones = [...new Set(pending.map((r) => r.ngoPhone).filter(Boolean))];
+        uniquePhones.forEach((phone) => {
+          fetch("/api/whatsapp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: phone,
+              message: `🍱 New Prasadam available! ${restaurantName} has posted ${totalServings} servings of surplus food. Open the app to request pickup. 🙏`,
+            }),
+          }).catch(() => {});
+        });
+      }).catch(() => {});
 
       toast.success("Listing posted! NGOs will be notified.");
       router.push("/restaurant");

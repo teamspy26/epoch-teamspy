@@ -82,6 +82,7 @@ export interface FoodRequest {
   priority: number;
   notes?: string;
   neededBy: Timestamp;
+  approvedByRestaurant?: string;
   createdAt: Timestamp;
 }
 

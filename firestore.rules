@@ -64,9 +64,9 @@ service cloud.firestore {
 
     // ── Escalations ────────────────────────────────────────────────────────────
     match /escalations/{id} {
-      allow read:   if userRole() == 'admin';
+      allow read:   if isAuth();
       allow create: if isAuth(); // agents
-      allow update: if userRole() == 'admin';
+      allow update: if isAuth();
     }
 
     // ── Notifications ──────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ service cloud.firestore {
 
     // ── Agent logs ─────────────────────────────────────────────────────────────
     match /agent_logs/{id} {
-      allow read:  if userRole() == 'admin';
+      allow read:   if isAuth();
       allow create: if isAuth();
     }
   }

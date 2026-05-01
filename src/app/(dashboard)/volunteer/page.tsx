@@ -8,10 +8,13 @@ import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatTimestamp } from "@/lib/utils";
-import { Truck, CheckCircle, MapPin, ArrowRight } from "lucide-react";
+import { Truck, CheckCircle, MapPin, Camera, ShieldCheck, AlertTriangle } from "lucide-react";
 import type { Delivery } from "@/lib/types";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import MapComponent from "@/components/ui/map";
+import { storage } from "@/lib/firebase/config";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 function DeliveryCard({
   delivery,
@@ -69,6 +72,38 @@ function DeliveryCard({
     (delivery.status === "finding_volunteer" && !isOwn) ||
     (isOwn && delivery.status !== "delivered" && delivery.status !== "finding_volunteer");
 
+  // Photo upload + quality check (shown when picked_up)
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [qualityResult, setQualityResult] = useState<{
+    passed: boolean;
+    recommendation: string;
+  } | null>(null);
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !volunteerId) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `quality-checks/${delivery.id}/${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const imageUrl = await getDownloadURL(storageRef);
+
+      const res = await fetch("/api/agents/quality-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deliveryId: delivery.id, imageUrl, volunteerId }),
+      });
+      const data = await res.json();
+      setQualityResult({ passed: data.passed, recommendation: data.recommendation });
+      toast.success(data.passed ? "Food quality approved!" : "Quality issue detected — check details.");
+    } catch {
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
       <div className="flex justify-between items-start mb-3">
@@ -85,6 +120,34 @@ function DeliveryCard({
           <p className="text-sm text-slate-700">{delivery.dropAddress}</p>
         </div>
       </div>
+
+      {/* Quality check UI — shown after pickup */}
+      {isOwn && delivery.status === "picked_up" && (
+        <div className="mb-3 rounded-xl bg-amber-50 border border-amber-100 p-3">
+          <p className="text-xs font-medium text-amber-800 mb-2 flex items-center gap-1.5">
+            <Camera className="h-3.5 w-3.5" /> AI Quality Check
+          </p>
+          {qualityResult ? (
+            <div className={`flex items-start gap-2 text-xs ${qualityResult.passed ? "text-emerald-700" : "text-red-700"}`}>
+              {qualityResult.passed
+                ? <ShieldCheck className="h-4 w-4 flex-shrink-0" />
+                : <AlertTriangle className="h-4 w-4 flex-shrink-0" />}
+              <span>{qualityResult.recommendation}</span>
+            </div>
+          ) : (
+            <>
+              <input ref={fileRef} type="file" accept="image/*" capture="environment"
+                className="hidden" onChange={handlePhotoUpload} />
+              <Button size="sm" variant="outline" loading={uploading}
+                onClick={() => fileRef.current?.click()} className="w-full text-xs">
+                <Camera className="h-3.5 w-3.5" />
+                {uploading ? "Analysing with AI..." : "Photo food for quality check"}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {canAct && (
         <Button size="sm" className="w-full" onClick={handleAction} loading={loading}>
           {actionLabel[delivery.status] ?? "Update"}
@@ -103,6 +166,18 @@ export default function VolunteerDashboard() {
   const completed = myDeliveries.filter((d) => d.status === "delivered").length;
   const active = myDeliveries.filter((d) => d.status !== "delivered").length;
 
+  const mapMarkers = [...openDeliveries, ...myDeliveries]
+    // Since delivery currently doesn't store lat/lng directly, we could ideally fetch them or
+    // map them if they did. Assuming we don't have it natively, we pass an empty array 
+    // but the component will still render the map safely.
+    .filter((d: any) => d.location?.latitude && d.location?.longitude)
+    .map((d: any) => ({
+      id: d.id,
+      lat: d.location.latitude,
+      lng: d.location.longitude,
+      title: `Delivery: ${d.pickupAddress}`,
+    }));
+
   return (
     <div className="space-y-6">
       <div>
@@ -116,6 +191,15 @@ export default function VolunteerDashboard() {
         <ImpactCounter label="Active deliveries" value={active} icon={<Truck />} />
         <ImpactCounter label="Completed" value={completed} icon={<CheckCircle />} color="text-emerald-600" />
       </div>
+
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold text-slate-900">Map & Tracking</h2>
+        </CardHeader>
+        <CardContent>
+          <MapComponent markers={mapMarkers} height="400px" />
+        </CardContent>
+      </Card>
 
       {/* Open deliveries available to accept */}
       {openDeliveries.length > 0 && (

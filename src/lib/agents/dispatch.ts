@@ -12,10 +12,12 @@ import {
   updateDelivery,
   createNotification,
   logAgentDecision,
+  getRequestById,
 } from "@/lib/firebase/db";
 import { db } from "@/lib/firebase/config";
 import { COLLECTIONS } from "@/lib/firebase/db";
 import type { Match, Delivery } from "@/lib/types";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 export async function runDispatchAgent(match: Match): Promise<string | null> {
   await logAgentDecision("dispatch", "start_dispatch", { matchId: match.id });
@@ -66,6 +68,10 @@ export async function assignVolunteer(
   volunteerName: string,
   volunteerPhone: string
 ) {
+  const { getDoc, doc } = await import("firebase/firestore");
+  const snap = await getDoc(doc(db, COLLECTIONS.DELIVERIES, deliveryId));
+  const delivery = snap.exists() ? snap.data() as Delivery : null;
+
   await updateDelivery(deliveryId, {
     volunteerId,
     volunteerName,
@@ -73,6 +79,14 @@ export async function assignVolunteer(
     status: "assigned",
     estimatedETA: 30,
   });
+
+  // WhatsApp to volunteer with pickup details
+  if (delivery) {
+    sendWhatsApp(
+      volunteerPhone,
+      `🚴 Prasadam Delivery Assigned!\nPickup: ${delivery.pickupAddress}\nDrop: ${delivery.dropAddress}\nPlease open the app to confirm and start. Dhanyavaad 🙏`
+    ).catch(() => {});
+  }
 
   await logAgentDecision("dispatch", "volunteer_assigned", { deliveryId, volunteerId });
 }
@@ -99,6 +113,24 @@ export async function updateDeliveryProgress(
     // Import and update listing
     const { updateListing } = await import("@/lib/firebase/db");
     await updateListing(delivery.listingId, { status: "collected" });
+
+    // WhatsApp to NGO on successful delivery
+    const request = await getRequestById(delivery.requestId);
+    if (request?.ngoPhone) {
+      sendWhatsApp(
+        request.ngoPhone,
+        `🎉 Prasadam Delivered! ${request.servingsNeeded} servings${request.approvedByRestaurant ? ` from ${request.approvedByRestaurant}` : ""} have been received. Blessed food distributed. 🙏`
+      ).catch(() => {});
+    }
+
+    await createNotification({
+      userId: delivery.requestId,
+      title: "Delivery complete!",
+      body: `Your food has been delivered successfully.`,
+      type: "delivery",
+      read: false,
+      metadata: { deliveryId },
+    });
 
     await logAgentDecision("dispatch", "delivery_completed", { deliveryId });
   }
