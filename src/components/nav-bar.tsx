@@ -66,7 +66,17 @@ export function NavBar() {
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 )}
               >
-                {l.label === "Dashboard" ? t("Dashboard") : l.label === "Overview" ? t("Overview") : l.label}
+                {(() => {
+                  const navKeyMap: Record<string, Parameters<typeof t>[0]> = {
+                    "Dashboard": "Dashboard", "Overview": "Overview",
+                    "Request Food": "Nav.RequestFood", "History": "Nav.History",
+                    "My Listings": "Nav.MyListings", "Add Surplus": "Nav.AddSurplus",
+                    "My Deliveries": "Nav.MyDeliveries", "Escalations": "Nav.Escalations",
+                    "Analytics": "Nav.Analytics", "Donate Food": "Nav.DonateFood",
+                  };
+                  const key = navKeyMap[l.label];
+                  return key ? t(key) : l.label;
+                })()}
               </Link>
             ))}
           </nav>

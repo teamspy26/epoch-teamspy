@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatTimestamp } from "@/lib/utils";
 import { Truck, CheckCircle, MapPin, Camera, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useTranslation } from "@/context/language-context";
 import type { Delivery } from "@/lib/types";
 import toast from "react-hot-toast";
 import { useState, useRef } from "react";
@@ -159,6 +160,7 @@ function DeliveryCard({
 
 export default function VolunteerDashboard() {
   const { appUser } = useAuth();
+  const { t } = useTranslation();
   const { deliveries: myDeliveries, loading: myLoading } = useVolunteerDeliveries(appUser?.uid);
   const { deliveries: openDeliveries } = useOpenDeliveries();
   const [tick, setTick] = useState(0);
@@ -188,8 +190,8 @@ export default function VolunteerDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <ImpactCounter label="Active deliveries" value={active} icon={<Truck />} />
-        <ImpactCounter label="Completed" value={completed} icon={<CheckCircle />} color="text-emerald-600" />
+        <ImpactCounter label={t("Dash.ActiveDeliveries")} value={active} icon={<Truck />} />
+        <ImpactCounter label={t("Dash.Completed")} value={completed} icon={<CheckCircle />} color="text-emerald-600" />
       </div>
 
       <Card>
@@ -206,7 +208,7 @@ export default function VolunteerDashboard() {
         <div>
           <h2 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <MapPin className="h-4 w-4 text-[#EF9F27]" />
-            Available Pickups ({openDeliveries.length})
+            {t("Dash.AvailablePickups")} ({openDeliveries.length})
           </h2>
           <div className="grid gap-3">
             {openDeliveries.map((d) => (
@@ -228,7 +230,7 @@ export default function VolunteerDashboard() {
       <div>
         <h2 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
           <Truck className="h-4 w-4 text-[#1D9E75]" />
-          My Deliveries
+          {t("Dash.MyDeliveries")}
         </h2>
         {myLoading ? (
           <div className="space-y-3">

@@ -10,9 +10,11 @@ import MapComponent from "@/components/ui/map";
 import { formatTimestamp, urgencyColor, timeFromNow } from "@/lib/utils";
 import { Users, Package, Clock, CheckCircle, Plus } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/context/language-context";
 
 export default function NgoDashboard() {
   const { appUser } = useAuth();
+  const { t } = useTranslation();
   const { requests, loading } = useNgoRequests(appUser?.uid);
 
   const delivered = requests.filter((r) => r.status === "delivered").length;
@@ -46,16 +48,16 @@ export default function NgoDashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <ImpactCounter label="Active requests" value={active} icon={<Package />} />
-        <ImpactCounter label="Delivered" value={delivered} icon={<CheckCircle />} color="text-emerald-600" />
-        <ImpactCounter label="Total requests" value={requests.length} icon={<Clock />} color="text-blue-600" />
-        <ImpactCounter label="Beneficiaries served" value={totalBeneficiaries} icon={<Users />} color="text-[#EF9F27]" />
+        <ImpactCounter label={t("Dash.ActiveRequests")} value={active} icon={<Package />} />
+        <ImpactCounter label={t("Dash.Delivered")} value={delivered} icon={<CheckCircle />} color="text-emerald-600" />
+        <ImpactCounter label={t("Dash.TotalRequests")} value={requests.length} icon={<Clock />} color="text-blue-600" />
+        <ImpactCounter label={t("Dash.Beneficiaries")} value={totalBeneficiaries} icon={<Users />} color="text-[#EF9F27]" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">Recent Requests</h2>
+            <h2 className="font-semibold text-slate-900">{t("Dash.RecentRequests")}</h2>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -108,7 +110,7 @@ export default function NgoDashboard() {
 
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">Request Locations</h2>
+            <h2 className="font-semibold text-slate-900">{t("Dash.RequestLocations")}</h2>
           </CardHeader>
           <CardContent>
             {loading ? (

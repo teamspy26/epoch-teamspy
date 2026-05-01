@@ -14,6 +14,7 @@ import {
   logAgentDecision,
   createNotification,
   getRequestById,
+  getUser,
 } from "@/lib/firebase/db";
 import type { FoodRequest, FoodListing, Match } from "@/lib/types";
 import { runSupplyAgent } from "./supply";
@@ -101,6 +102,17 @@ export async function runCoordinatorAgent(request: FoodRequest): Promise<string 
     listingId: listing.id,
     restaurantId: listing.restaurantId,
   });
+
+  // 6. Auto-approve if restaurant has opted in
+  const restaurantUser = await getUser(listing.restaurantId);
+  if (restaurantUser?.autoApprove) {
+    await logAgentDecision("coordinator", "auto_approve", {
+      matchId,
+      restaurantId: listing.restaurantId,
+      reason: "restaurant has auto-approve enabled",
+    });
+    await handleRestaurantApproval(matchId, true, listing.restaurantId);
+  }
 
   return matchId;
 }

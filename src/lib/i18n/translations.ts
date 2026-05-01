@@ -124,7 +124,24 @@ export const translations = {
     "CTA.JoinBtn": "Join the movement",
     "CTA.FooterNote": "No app download required · Works on any device · Phone OTP only",
 
-    "Footer.Tagline": "प्रसादम् · Built with Next.js, Firebase & Claude AI · Made in India with love"
+    "Footer.Tagline": "प्रसादम् · Built with Next.js, Firebase & Claude AI · Made in India with love",
+
+    "Nav.RequestFood": "Request Food", "Nav.History": "History", "Nav.MyListings": "My Listings",
+    "Nav.AddSurplus": "Add Surplus", "Nav.MyDeliveries": "My Deliveries",
+    "Nav.Escalations": "Escalations", "Nav.Analytics": "Analytics", "Nav.DonateFood": "Donate Food",
+    "Dash.Welcome": "Welcome,", "Dash.ActiveRequests": "Active requests", "Dash.Delivered": "Delivered",
+    "Dash.TotalRequests": "Total requests", "Dash.Beneficiaries": "Beneficiaries served",
+    "Dash.RequestFood": "Request Food", "Dash.RecentRequests": "Recent Requests",
+    "Dash.RequestLocations": "Request Locations", "Dash.NoRequests": "No requests yet.",
+    "Dash.AvailableListings": "Available listings", "Dash.MatchedCollected": "Matched / Collected",
+    "Dash.TotalListings": "Total listings", "Dash.AddSurplus": "Add Surplus",
+    "Dash.MyListings": "My Listings", "Dash.ListingLocations": "Listing Locations",
+    "Dash.ApprovalNeeded": "Approval Needed",
+    "Dash.ActiveDeliveries": "Active deliveries", "Dash.Completed": "Completed",
+    "Dash.AvailablePickups": "Available Pickups", "Dash.MyDeliveries": "My Deliveries",
+    "Dash.AutoApprove": "Auto-Approve Requests",
+    "Dash.AutoApproveOn": "Agent approves NGO requests instantly.",
+    "Dash.AutoApproveOff": "You review each incoming request manually."
   },
   kn: {
     Dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
@@ -251,7 +268,24 @@ export const translations = {
     "CTA.JoinBtn": "ಚಳುವಳಿಯಲ್ಲಿ ಸೇರಿ",
     "CTA.FooterNote": "ಯಾವುದೇ ಅಪ್ಲಿಕೇಶನ್ ಡೌನ್‌ಲೋಡ್ ಅಗತ್ಯವಿಲ್ಲ · ಯಾವುದೇ ಸಾಧನದಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ · ಕೇವಲ ಫೋನ್ OTP",
 
-    "Footer.Tagline": "ಪ್ರಸಾದಂ · Next.js, Firebase & Claude AI ನಿಂದ ನಿರ್ಮಿಸಲಾಗಿದೆ · ಭಾರತದಲ್ಲಿ ಪ್ರೀತಿಯಿಂದ ತಯಾರಿಸಲಾಗಿದೆ"
+    "Footer.Tagline": "ಪ್ರಸಾದಂ · Next.js, Firebase & Claude AI ನಿಂದ ನಿರ್ಮಿಸಲಾಗಿದೆ · ಭಾರತದಲ್ಲಿ ಪ್ರೀತಿಯಿಂದ ತಯಾರಿಸಲಾಗಿದೆ",
+
+    "Nav.RequestFood": "ಆಹಾರ ವಿನಂತಿಸಿ", "Nav.History": "ಇತಿಹಾಸ", "Nav.MyListings": "ನನ್ನ ಪಟ್ಟಿಗಳು",
+    "Nav.AddSurplus": "ಹೆಚ್ಚುವರಿ ಸೇರಿಸಿ", "Nav.MyDeliveries": "ನನ್ನ ವಿತರಣೆಗಳು",
+    "Nav.Escalations": "ಸಮಸ್ಯೆಗಳು", "Nav.Analytics": "ವಿಶ್ಲೇಷಣೆ", "Nav.DonateFood": "ಆಹಾರ ದಾನ",
+    "Dash.Welcome": "ಸ್ವಾಗತ,", "Dash.ActiveRequests": "ಸಕ್ರಿಯ ವಿನಂತಿಗಳು", "Dash.Delivered": "ವಿತರಿಸಲಾಗಿದೆ",
+    "Dash.TotalRequests": "ಒಟ್ಟು ವಿನಂತಿಗಳು", "Dash.Beneficiaries": "ಫಲಾನುಭವಿಗಳು",
+    "Dash.RequestFood": "ಆಹಾರ ವಿನಂತಿಸಿ", "Dash.RecentRequests": "ಇತ್ತೀಚಿನ ವಿನಂತಿಗಳು",
+    "Dash.RequestLocations": "ವಿನಂತಿ ಸ್ಥಳಗಳು", "Dash.NoRequests": "ಇನ್ನೂ ಯಾವುದೇ ವಿನಂತಿಗಳಿಲ್ಲ.",
+    "Dash.AvailableListings": "ಲಭ್ಯ ಪಟ್ಟಿಗಳು", "Dash.MatchedCollected": "ಹೊಂದಾಣಿಕೆ / ಸಂಗ್ರಹ",
+    "Dash.TotalListings": "ಒಟ್ಟು ಪಟ್ಟಿಗಳು", "Dash.AddSurplus": "ಹೆಚ್ಚುವರಿ ಸೇರಿಸಿ",
+    "Dash.MyListings": "ನನ್ನ ಪಟ್ಟಿಗಳು", "Dash.ListingLocations": "ಪಟ್ಟಿ ಸ್ಥಳಗಳು",
+    "Dash.ApprovalNeeded": "ಅನುಮೋದನೆ ಅಗತ್ಯ",
+    "Dash.ActiveDeliveries": "ಸಕ್ರಿಯ ವಿತರಣೆಗಳು", "Dash.Completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
+    "Dash.AvailablePickups": "ಲಭ್ಯ ಪಿಕಪ್‌ಗಳು", "Dash.MyDeliveries": "ನನ್ನ ವಿತರಣೆಗಳು",
+    "Dash.AutoApprove": "ಸ್ವಯಂ-ಅನುಮೋದನೆ",
+    "Dash.AutoApproveOn": "ಏಜೆಂಟ್ ತಕ್ಷಣ ವಿನಂತಿಗಳನ್ನು ಅನುಮೋದಿಸುತ್ತದೆ.",
+    "Dash.AutoApproveOff": "ನೀವು ಪ್ರತಿ ವಿನಂತಿಯನ್ನು ಹಸ್ತಚಾಲಿತವಾಗಿ ಪರಿಶೀಲಿಸಿ."
   },
   hi: {
     Dashboard: "डैशबोर्ड",
@@ -378,7 +412,40 @@ export const translations = {
     "CTA.JoinBtn": "आंदोलन में शामिल हों",
     "CTA.FooterNote": "कोई ऐप डाउनलोड आवश्यक नहीं · किसी भी डिवाइस पर काम करता है · केवल फोन OTP",
 
-    "Footer.Tagline": "प्रसादम · Next.js, Firebase & Claude AI के साथ निर्मित · भारत में प्यार से बना"
+    "Footer.Tagline": "प्रसादम · Next.js, Firebase & Claude AI के साथ निर्मित · भारत में प्यार से बना",
+
+    "Nav.RequestFood": "खाना मांगें",
+    "Nav.History": "इतिहास",
+    "Nav.MyListings": "मेरी सूचियाँ",
+    "Nav.AddSurplus": "अधिशेष जोड़ें",
+    "Nav.MyDeliveries": "मेरी डिलीवरी",
+    "Nav.Escalations": "एस्केलेशन",
+    "Nav.Analytics": "विश्लेषण",
+    "Nav.DonateFood": "खाना दान करें",
+
+    "Dash.Welcome": "स्वागत है,",
+    "Dash.ActiveRequests": "सक्रिय अनुरोध",
+    "Dash.Delivered": "डिलीवर किया",
+    "Dash.TotalRequests": "कुल अनुरोध",
+    "Dash.Beneficiaries": "लाभार्थी",
+    "Dash.RequestFood": "खाना मांगें",
+    "Dash.RecentRequests": "हाल के अनुरोध",
+    "Dash.RequestLocations": "अनुरोध स्थान",
+    "Dash.NoRequests": "अभी तक कोई अनुरोध नहीं।",
+    "Dash.AvailableListings": "उपलब्ध सूचियाँ",
+    "Dash.MatchedCollected": "मिलाया / एकत्र किया",
+    "Dash.TotalListings": "कुल सूचियाँ",
+    "Dash.AddSurplus": "अधिशेष जोड़ें",
+    "Dash.MyListings": "मेरी सूचियाँ",
+    "Dash.ListingLocations": "सूची स्थान",
+    "Dash.ApprovalNeeded": "अनुमोदन आवश्यक",
+    "Dash.ActiveDeliveries": "सक्रिय डिलीवरी",
+    "Dash.Completed": "पूरा हुआ",
+    "Dash.AvailablePickups": "उपलब्ध पिकअप",
+    "Dash.MyDeliveries": "मेरी डिलीवरी",
+    "Dash.AutoApprove": "स्वतः अनुमोदन",
+    "Dash.AutoApproveOn": "एजेंट तुरंत अनुरोध अनुमोदित करेगा।",
+    "Dash.AutoApproveOff": "आप प्रत्येक अनुरोध की मैन्युअल समीक्षा करें।"
   },
   te: {
     Dashboard: "డాష్‌బోర్డ్",
@@ -505,7 +572,24 @@ export const translations = {
     "CTA.JoinBtn": "ఉద్యమంలో చేరండి",
     "CTA.FooterNote": "యాప్ డౌన్‌లోడ్ అవసరం లేదు · ఏ పరికరంలోనైనా పనిచేస్తుంది · ఫోన్ OTP మాత్రమే",
 
-    "Footer.Tagline": "ప్రసాదం · Next.js, Firebase & Claude AI తో నిర్మించబడింది · భారతదేశంలో ప్రేమతో తయారు చేయబడింది"
+    "Footer.Tagline": "ప్రసాదం · Next.js, Firebase & Claude AI తో నిర్మించబడింది · భారతదేశంలో ప్రేమతో తయారు చేయబడింది",
+
+    "Nav.RequestFood": "ఆహారం అభ్యర్థించండి", "Nav.History": "చరిత్ర", "Nav.MyListings": "నా జాబితాలు",
+    "Nav.AddSurplus": "మిగులు జోడించండి", "Nav.MyDeliveries": "నా డెలివరీలు",
+    "Nav.Escalations": "సమస్యలు", "Nav.Analytics": "విశ్లేషణలు", "Nav.DonateFood": "ఆహారం దానం",
+    "Dash.Welcome": "స్వాగతం,", "Dash.ActiveRequests": "క్రియాశీల అభ్యర్థనలు", "Dash.Delivered": "డెలివరీ చేయబడింది",
+    "Dash.TotalRequests": "మొత్తం అభ్యర్థనలు", "Dash.Beneficiaries": "లబ్ధిదారులు",
+    "Dash.RequestFood": "ఆహారం అభ్యర్థించండి", "Dash.RecentRequests": "ఇటీవలి అభ్యర్థనలు",
+    "Dash.RequestLocations": "అభ్యర్థన స్థానాలు", "Dash.NoRequests": "ఇంకా అభ్యర్థనలు లేవు.",
+    "Dash.AvailableListings": "అందుబాటులో ఉన్న జాబితాలు", "Dash.MatchedCollected": "సరిపోలిక / సేకరణ",
+    "Dash.TotalListings": "మొత్తం జాబితాలు", "Dash.AddSurplus": "మిగులు జోడించండి",
+    "Dash.MyListings": "నా జాబితాలు", "Dash.ListingLocations": "జాబితా స్థానాలు",
+    "Dash.ApprovalNeeded": "ఆమోదం అవసరం",
+    "Dash.ActiveDeliveries": "క్రియాశీల డెలివరీలు", "Dash.Completed": "పూర్తయింది",
+    "Dash.AvailablePickups": "అందుబాటులో పికప్‌లు", "Dash.MyDeliveries": "నా డెలివరీలు",
+    "Dash.AutoApprove": "స్వయంచాలక ఆమోదం",
+    "Dash.AutoApproveOn": "ఏజెంట్ NGO అభ్యర్థనలను వెంటనే ఆమోదిస్తుంది.",
+    "Dash.AutoApproveOff": "మీరు ప్రతి అభ్యర్థనను మాన్యువల్‌గా సమీక్షించండి."
   },
   ta: {
     Dashboard: "டாஷ்போர்டு",
@@ -632,7 +716,24 @@ export const translations = {
     "CTA.JoinBtn": "இயக்கத்தில் சேருங்கள்",
     "CTA.FooterNote": "எந்த செயலியும் பதிவிறக்க தேவையில்லை · எந்த சாதனத்திலும் வேலை செய்யும் · போன் OTP மட்டுமே",
 
-    "Footer.Tagline": "பிரசாதம் · Next.js, Firebase & Claude AI மூலம் உருவாக்கப்பட்டது · இந்தியாவில் அன்புடன் தயாரிக்கப்பட்டது"
+    "Footer.Tagline": "பிரசாதம் · Next.js, Firebase & Claude AI மூலம் உருவாக்கப்பட்டது · இந்தியாவில் அன்புடன் தயாரிக்கப்பட்டது",
+
+    "Nav.RequestFood": "உணவை கோருங்கள்", "Nav.History": "வரலாறு", "Nav.MyListings": "என் பட்டியல்கள்",
+    "Nav.AddSurplus": "உபரி சேர்க்கவும்", "Nav.MyDeliveries": "என் விநியோகங்கள்",
+    "Nav.Escalations": "பிரச்சனைகள்", "Nav.Analytics": "பகுப்பாய்வு", "Nav.DonateFood": "உணவு தானம்",
+    "Dash.Welcome": "வரவேற்கிறோம்,", "Dash.ActiveRequests": "செயலில் உள்ள கோரிக்கைகள்",
+    "Dash.Delivered": "வழங்கப்பட்டது", "Dash.TotalRequests": "மொத்த கோரிக்கைகள்",
+    "Dash.Beneficiaries": "பயனாளிகள்", "Dash.RequestFood": "உணவை கோருங்கள்",
+    "Dash.RecentRequests": "சமீபத்திய கோரிக்கைகள்", "Dash.RequestLocations": "கோரிக்கை இடங்கள்",
+    "Dash.NoRequests": "இன்னும் கோரிக்கைகள் இல்லை.", "Dash.AvailableListings": "கிடைக்கும் பட்டியல்கள்",
+    "Dash.MatchedCollected": "பொருந்திய / சேகரிக்கப்பட்டது", "Dash.TotalListings": "மொத்த பட்டியல்கள்",
+    "Dash.AddSurplus": "உபரி சேர்க்கவும்", "Dash.MyListings": "என் பட்டியல்கள்",
+    "Dash.ListingLocations": "பட்டியல் இடங்கள்", "Dash.ApprovalNeeded": "ஒப்புதல் தேவை",
+    "Dash.ActiveDeliveries": "செயலில் உள்ள விநியோகங்கள்", "Dash.Completed": "முடிந்தது",
+    "Dash.AvailablePickups": "கிடைக்கும் பிக்கப்கள்", "Dash.MyDeliveries": "என் விநியோகங்கள்",
+    "Dash.AutoApprove": "தானியங்கி ஒப்புதல்",
+    "Dash.AutoApproveOn": "முகவர் NGO கோரிக்கைகளை உடனடியாக ஒப்புகிறது.",
+    "Dash.AutoApproveOff": "நீங்கள் ஒவ்வொரு கோரிக்கையையும் கையால் மதிப்பாய்வு செய்யுங்கள்."
   }
 };
 

@@ -253,6 +253,27 @@ export function subscribeToNotifications(userId: string, cb: (n: Notification[])
   return onSnapshot(q, (s) => cb(byCreatedAtDesc(snap<Notification>(s))));
 }
 
+// ── Analytics ─────────────────────────────────────────────────────────────────
+export async function getAllRequests(): Promise<FoodRequest[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.REQUESTS));
+  return snap<FoodRequest>(snapshot);
+}
+
+export async function getAllListings(): Promise<FoodListing[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.LISTINGS));
+  return snap<FoodListing>(snapshot);
+}
+
+export async function getAllDeliveries(): Promise<Delivery[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.DELIVERIES));
+  return snap<Delivery>(snapshot);
+}
+
+export async function getAllMatches(): Promise<Match[]> {
+  const snapshot = await getDocs(collection(db, COLLECTIONS.MATCHES));
+  return snap<Match>(snapshot);
+}
+
 // ── Agent Logging ─────────────────────────────────────────────────────────────
 export interface AgentLog {
   id: string;

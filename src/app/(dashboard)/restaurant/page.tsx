@@ -11,16 +11,21 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import MapComponent from "@/components/ui/map";
 import { formatTimestamp, timeFromNow } from "@/lib/utils";
-import { Package, CheckCircle, Clock, Plus, Bell } from "lucide-react";
+import { Package, CheckCircle, Clock, Plus, Bell, Zap } from "lucide-react";
+import { useTranslation } from "@/context/language-context";
 import Link from "next/link";
 import type { Match } from "@/lib/types";
+import { updateDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
 import toast from "react-hot-toast";
 
 export default function RestaurantDashboard() {
   const { appUser } = useAuth();
+  const { t } = useTranslation();
   const { listings, loading } = useRestaurantListings(appUser?.uid);
   const [pendingMatches, setPendingMatches] = useState<Match[]>([]);
   const [approving, setApproving] = useState<string | null>(null);
+  const [togglingAuto, setTogglingAuto] = useState(false);
 
   useEffect(() => {
     if (!appUser?.uid) return;
@@ -39,6 +44,20 @@ export default function RestaurantDashboard() {
       lng: l.location!.longitude,
       title: `${l.totalServings} servings available`,
     }));
+
+  async function toggleAutoApprove() {
+    if (!appUser) return;
+    setTogglingAuto(true);
+    try {
+      const next = !appUser.autoApprove;
+      await updateDoc(doc(db, "users", appUser.uid), { autoApprove: next });
+      toast.success(next ? "Auto-approve ON — agent will approve new requests instantly." : "Auto-approve OFF — you'll review each request manually.");
+    } catch {
+      toast.error("Failed to update setting.");
+    } finally {
+      setTogglingAuto(false);
+    }
+  }
 
   async function handleApproval(matchId: string, approved: boolean) {
     setApproving(matchId);
@@ -70,9 +89,31 @@ export default function RestaurantDashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <ImpactCounter label="Available listings" value={available} icon={<Package />} />
-        <ImpactCounter label="Matched / Collected" value={matched} icon={<CheckCircle />} color="text-emerald-600" />
-        <ImpactCounter label="Total listings" value={listings.length} icon={<Clock />} color="text-blue-600" />
+        <ImpactCounter label={t("Dash.AvailableListings")} value={available} icon={<Package />} />
+        <ImpactCounter label={t("Dash.MatchedCollected")} value={matched} icon={<CheckCircle />} color="text-emerald-600" />
+        <ImpactCounter label={t("Dash.TotalListings")} value={listings.length} icon={<Clock />} color="text-blue-600" />
+      </div>
+
+      {/* Auto-approve toggle */}
+      <div className={`rounded-2xl border p-4 flex items-center justify-between ${appUser?.autoApprove ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200"}`}>
+        <div className="flex items-center gap-3">
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${appUser?.autoApprove ? "bg-emerald-100" : "bg-slate-100"}`}>
+            <Zap className={`h-5 w-5 ${appUser?.autoApprove ? "text-emerald-600" : "text-slate-400"}`} />
+          </div>
+          <div>
+            <p className="font-semibold text-slate-900 text-sm">{t("Dash.AutoApprove")}</p>
+            <p className="text-xs text-slate-500">
+              {appUser?.autoApprove ? t("Dash.AutoApproveOn") : t("Dash.AutoApproveOff")}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={toggleAutoApprove}
+          disabled={togglingAuto}
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${appUser?.autoApprove ? "bg-emerald-500" : "bg-slate-300"}`}
+        >
+          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${appUser?.autoApprove ? "translate-x-5" : "translate-x-0"}`} />
+        </button>
       </div>
 
       {/* Pending approval requests */}
@@ -130,7 +171,7 @@ export default function RestaurantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">My Listings</h2>
+            <h2 className="font-semibold text-slate-900">{t("Dash.MyListings")}</h2>
           </CardHeader>
           <CardContent>
             {loading ? (

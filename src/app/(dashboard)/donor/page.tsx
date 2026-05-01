@@ -13,7 +13,13 @@ import {
   Camera, CheckCircle, AlertTriangle, Sparkles, Upload,
   Leaf, Info, UtensilsCrossed, RefreshCw,
 } from "lucide-react";
+import { VoiceInput } from "@/components/voice-input";
+import { useTranslation } from "@/context/language-context";
 import toast from "react-hot-toast";
+
+const langMap: Record<string, string> = {
+  en: "en-IN", kn: "kn-IN", hi: "hi-IN", te: "te-IN", ta: "ta-IN",
+};
 
 type ScanResult = {
   safe: boolean;
@@ -35,11 +41,13 @@ const freshnessColor: Record<string, string> = {
 
 export default function DonorDashboard() {
   const { appUser } = useAuth();
+  const { language } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [scanStep, setScanStep] = useState<string>("");
   const [result, setResult] = useState<ScanResult | null>(null);
   const [donating, setDonating] = useState(false);
   const [address, setAddress] = useState(appUser?.address ?? "");
@@ -56,26 +64,51 @@ export default function DonorDashboard() {
     reader.readAsDataURL(file);
   }
 
-  async function handleScan() {
-    if (!imageFile || !appUser) return;
-    setScanning(true);
-    try {
-      const storageRef = ref(storage, `donor-scans/${appUser.uid}/${Date.now()}`);
-      await uploadBytes(storageRef, imageFile);
-      const imageUrl = await getDownloadURL(storageRef);
+  /** Resize a data URL to max 800px on the longest side (keeps aspect ratio). */
+  function resizeImage(dataUrl: string, maxPx = 800): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = dataUrl;
+    });
+  }
 
+  async function handleScan() {
+    if (!imageFile || !appUser || !preview) return;
+    setScanning(true);
+    setScanStep("Preparing image…");
+    try {
+      const resized = await resizeImage(preview);
+      // Send base64 data URL directly — avoids Firebase Storage auth issues with OpenAI
+      setScanStep("Analyzing with AI…");
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55_000);
       const res = await fetch("/api/agents/food-scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl, userId: appUser.uid }),
+        body: JSON.stringify({ imageData: resized, userId: appUser.uid }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Scan failed");
       setResult(data as ScanResult);
-    } catch {
-      toast.error("Scan failed. Please try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
+        toast.error("Analysis timed out. Please try again.");
+      } else {
+        toast.error("Scan failed. Please try again.");
+      }
     } finally {
       setScanning(false);
+      setScanStep("");
     }
   }
 
@@ -86,7 +119,15 @@ export default function DonorDashboard() {
     }
     setDonating(true);
     try {
-      await createListing({
+      // Upload photo to Firebase Storage now (for the listing record)
+      let photoUrl: string | undefined;
+      if (imageFile) {
+        const storageRef = ref(storage, `donor-scans/${appUser.uid}/${Date.now()}`);
+        await uploadBytes(storageRef, imageFile);
+        photoUrl = await getDownloadURL(storageRef);
+      }
+
+      const listingId = await createListing({
         restaurantId: appUser.uid,
         restaurantName: appUser.name,
         restaurantPhone: appUser.phone,
@@ -96,9 +137,17 @@ export default function DonorDashboard() {
         address: address.trim(),
         status: "available",
         notes: `Individual donor. Freshness: ${result.freshness}. Category: ${result.category}.`,
+        ...(photoUrl ? { imageUrl: photoUrl } : {}),
       });
       setDonated(true);
-      toast.success("Your food is listed! A volunteer will be dispatched soon. 🙏");
+      toast.success("Your food is listed! Matching with NGOs now… 🙏");
+
+      // Fire coordinator to match any waiting NGO requests to this new listing
+      fetch("/api/agents/coordinator/match-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId }),
+      }).catch(() => {});
     } catch {
       toast.error("Failed to list food. Please try again.");
     } finally {
@@ -196,15 +245,23 @@ export default function DonorDashboard() {
 
           {/* Scan button */}
           {preview && !result && !donated && (
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={handleScan}
-              loading={scanning}
-            >
-              <Sparkles className="h-4 w-4" />
-              {scanning ? "AI is checking your food…" : "Scan with AI"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleScan}
+                disabled={scanning}
+              >
+                <Sparkles className="h-4 w-4" />
+                {scanning ? scanStep || "Scanning…" : "Scan with AI"}
+              </Button>
+              {scanning && (
+                <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+                  <div className="h-3 w-3 rounded-full border border-[#1D9E75] border-t-transparent animate-spin" />
+                  <span>{scanStep}</span>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Scan result */}
@@ -263,6 +320,10 @@ export default function DonorDashboard() {
                     placeholder="e.g. 12, MG Road, Bangalore"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
+                  />
+                  <VoiceInput
+                    languageCode={langMap[language] ?? "en-IN"}
+                    onTranscript={(t) => setAddress((prev) => prev ? `${prev} ${t}` : t)}
                   />
                   <Button className="w-full" size="lg" onClick={handleDonate} loading={donating}>
                     <UtensilsCrossed className="h-4 w-4" />

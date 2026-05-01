@@ -9,13 +9,21 @@ import { urgencyPriority } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { VoiceInput } from "@/components/voice-input";
+import { useTranslation } from "@/context/language-context";
 import { ArrowLeft, Utensils } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { UrgencyLevel } from "@/lib/types";
 
+// Maps language context to Sarvam language codes
+const langMap: Record<string, string> = {
+  en: "en-IN", kn: "kn-IN", hi: "hi-IN", te: "te-IN", ta: "ta-IN",
+};
+
 export default function RequestFoodPage() {
   const { appUser } = useAuth();
+  const { language } = useTranslation();
   const router = useRouter();
 
   const [servings, setServings] = useState("");
@@ -138,12 +146,18 @@ export default function RequestFoodPage() {
               <option value="24">Tomorrow</option>
             </Select>
 
-            <Input
-              label="Pickup / delivery address *"
-              placeholder="Full address where food should be delivered"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            <div className="flex flex-col gap-1.5">
+              <Input
+                label="Pickup / delivery address *"
+                placeholder="Full address where food should be delivered"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <VoiceInput
+                languageCode={langMap[language] ?? "en-IN"}
+                onTranscript={(t) => setAddress((prev) => prev ? `${prev} ${t}` : t)}
+              />
+            </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700">Notes (optional)</label>
@@ -153,6 +167,10 @@ export default function RequestFoodPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20 transition resize-none"
+              />
+              <VoiceInput
+                languageCode={langMap[language] ?? "en-IN"}
+                onTranscript={(t) => setNotes((prev) => prev ? `${prev} ${t}` : t)}
               />
             </div>
 

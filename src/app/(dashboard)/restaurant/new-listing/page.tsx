@@ -12,9 +12,16 @@ import { ArrowLeft, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { FoodItem } from "@/lib/types";
+import { VoiceInput } from "@/components/voice-input";
+import { useTranslation } from "@/context/language-context";
+
+const langMap: Record<string, string> = {
+  en: "en-IN", kn: "kn-IN", hi: "hi-IN", te: "te-IN", ta: "ta-IN",
+};
 
 export default function NewListingPage() {
   const { appUser } = useAuth();
+  const { language } = useTranslation();
   const router = useRouter();
 
   const [foodItems, setFoodItems] = useState<FoodItem[]>([{ name: "", quantity: 0, unit: "servings" }]);
@@ -179,12 +186,18 @@ export default function NewListingPage() {
               <option value="24">24 hours</option>
             </Select>
 
-            <Input
-              label="Pickup address *"
-              placeholder="Your restaurant address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            <div className="flex flex-col gap-1.5">
+              <Input
+                label="Pickup address *"
+                placeholder="Your restaurant address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <VoiceInput
+                languageCode={langMap[language] ?? "en-IN"}
+                onTranscript={(t) => setAddress((prev) => prev ? `${prev} ${t}` : t)}
+              />
+            </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700">Notes (optional)</label>
@@ -194,6 +207,10 @@ export default function NewListingPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20 transition resize-none"
+              />
+              <VoiceInput
+                languageCode={langMap[language] ?? "en-IN"}
+                onTranscript={(t) => setNotes((prev) => prev ? `${prev} ${t}` : t)}
               />
             </div>
 

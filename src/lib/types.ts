@@ -43,6 +43,7 @@ export interface AppUser {
   location?: GeoPoint;
   address?: string;
   verified: boolean;
+  autoApprove?: boolean;  // restaurants: auto-approve incoming matches without manual tap
   createdAt: Timestamp;
 }
 
