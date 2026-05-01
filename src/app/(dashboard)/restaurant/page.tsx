@@ -9,15 +9,18 @@ import { ImpactCounter } from "@/components/impact-counter";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { VoiceButton } from "@/components/voice-button";
 import MapComponent from "@/components/ui/map";
 import { formatTimestamp, timeFromNow } from "@/lib/utils";
-import { Package, CheckCircle, Clock, Plus, Bell, Zap } from "lucide-react";
+import { Package, CheckCircle, Clock, Plus, Bell, Zap, Volume2 } from "lucide-react";
 import { useTranslation } from "@/context/language-context";
 import Link from "next/link";
 import type { Match } from "@/lib/types";
 import { updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import toast from "react-hot-toast";
+import { handleRestaurantVoiceIntent } from "@/lib/services/voice-intent-handlers";
+import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
 
 export default function RestaurantDashboard() {
   const { appUser } = useAuth();
@@ -26,6 +29,7 @@ export default function RestaurantDashboard() {
   const [pendingMatches, setPendingMatches] = useState<Match[]>([]);
   const [approving, setApproving] = useState<string | null>(null);
   const [togglingAuto, setTogglingAuto] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   useEffect(() => {
     if (!appUser?.uid) return;
@@ -71,6 +75,36 @@ export default function RestaurantDashboard() {
     }
   }
 
+  const handleVoiceIntent = (result: VoiceIntentResult) => {
+    const handlers = {
+      onApproveMatch: (matchId?: string) => {
+        const match = pendingMatches[0];
+        if (match || matchId) {
+          handleApproval(match?.id || matchId!, true);
+        } else {
+          toast.error("No pending matches to approve");
+        }
+      },
+      onDeclineMatch: (matchId?: string) => {
+        const match = pendingMatches[0];
+        if (match || matchId) {
+          handleApproval(match?.id || matchId!, false);
+        } else {
+          toast.error("No pending matches to decline");
+        }
+      },
+      onToggleAutoApprove: () => {
+        toggleAutoApprove();
+      },
+      onCheckStatus: () => {
+        toast.success(`${pendingMatches.length} matches pending approval, ${available} listings available`);
+      },
+    };
+
+    const message = handleRestaurantVoiceIntent(result, handlers);
+    toast.success(message);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -80,12 +114,30 @@ export default function RestaurantDashboard() {
           </h1>
           <p className="text-slate-500 text-sm mt-0.5">Your surplus food dashboard</p>
         </div>
-        <Link href="/restaurant/new-listing">
-          <Button size="lg">
-            <Plus className="h-4 w-4" />
-            Add Surplus
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {voiceEnabled && (
+            <VoiceButton
+              role="restaurant"
+              onIntentDetected={handleVoiceIntent}
+              onError={(error) => toast.error(error)}
+            />
+          )}
+          <button
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            className={`p-2 rounded-lg transition-colors ${
+              voiceEnabled ? "bg-[#1D9E75] text-white" : "bg-slate-200 text-slate-600"
+            }`}
+            title="Toggle voice input"
+          >
+            <Volume2 className="h-5 w-5" />
+          </button>
+          <Link href="/restaurant/new-listing">
+            <Button size="lg">
+              <Plus className="h-4 w-4" />
+              Add Surplus
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

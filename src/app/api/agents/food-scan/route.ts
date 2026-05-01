@@ -7,6 +7,15 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if OpenAI API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("[Food Scan] OpenAI API key not configured");
+      return NextResponse.json(
+        { error: "API not configured. Please add OPENAI_API_KEY to .env.local" },
+        { status: 503 }
+      );
+    }
+
     // Accept either base64 data URL (preferred) or a remote imageUrl
     const { imageData, imageUrl, userId } = await req.json() as {
       imageData?: string;
@@ -18,6 +27,8 @@ export async function POST(req: NextRequest) {
     if (!imageSource) {
       return NextResponse.json({ error: "imageData or imageUrl required" }, { status: 400 });
     }
+
+    console.log("[Food Scan] Starting analysis for user:", userId);
 
     const response = await openai.chat.completions.create({
       model: MODELS.vision,
@@ -57,6 +68,8 @@ Guidelines:
     });
 
     const raw = response.choices[0].message.content ?? "{}";
+    console.log("[Food Scan] Raw response:", raw.substring(0, 100) + "...");
+
     const result = JSON.parse(raw) as {
       safe: boolean;
       foodName: string;
@@ -77,6 +90,12 @@ Guidelines:
     result.recommendation = result.recommendation ?? "Please try a clearer photo.";
     result.category = result.category ?? "other";
 
+    console.log("[Food Scan] Analysis complete:", {
+      safe: result.safe,
+      foodName: result.foodName,
+      estimatedServings: result.estimatedServings,
+    });
+
     // Fire-and-forget — never let logging block or fail the response
     logAgentDecision("food_scan", result.safe ? "approved" : "rejected", {
       userId,
@@ -88,7 +107,23 @@ Guidelines:
 
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
-    console.error("[Food Scan Agent]", error);
-    return NextResponse.json({ error: "Scan failed. Please try again." }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[Food Scan Agent] Full error:", {
+      message: errorMessage,
+      type: error instanceof Error ? error.constructor.name : typeof error,
+      error,
+    });
+
+    // Provide helpful error messages based on error type
+    let userMessage = "Scan failed. Please try again.";
+    if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
+      userMessage = "API authentication failed. Check your OpenAI API key.";
+    } else if (errorMessage.includes("429") || errorMessage.includes("rate")) {
+      userMessage = "API rate limit exceeded. Please wait a moment and try again.";
+    } else if (errorMessage.includes("timeout")) {
+      userMessage = "Analysis took too long. Please try with a clearer photo.";
+    }
+
+    return NextResponse.json({ error: userMessage }, { status: 500 });
   }
 }

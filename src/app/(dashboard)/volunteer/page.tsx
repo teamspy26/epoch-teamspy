@@ -7,8 +7,9 @@ import { ImpactCounter } from "@/components/impact-counter";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { VoiceButton } from "@/components/voice-button";
 import { formatTimestamp } from "@/lib/utils";
-import { Truck, CheckCircle, MapPin, Camera, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Truck, CheckCircle, MapPin, Camera, ShieldCheck, AlertTriangle, Volume2 } from "lucide-react";
 import { useTranslation } from "@/context/language-context";
 import type { Delivery } from "@/lib/types";
 import toast from "react-hot-toast";
@@ -16,6 +17,8 @@ import { useState, useRef } from "react";
 import MapComponent from "@/components/ui/map";
 import { storage } from "@/lib/firebase/config";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { handleVolunteerVoiceIntent } from "@/lib/services/voice-intent-handlers";
+import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
 
 function DeliveryCard({
   delivery,
@@ -164,14 +167,12 @@ export default function VolunteerDashboard() {
   const { deliveries: myDeliveries, loading: myLoading } = useVolunteerDeliveries(appUser?.uid);
   const { deliveries: openDeliveries } = useOpenDeliveries();
   const [tick, setTick] = useState(0);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   const completed = myDeliveries.filter((d) => d.status === "delivered").length;
   const active = myDeliveries.filter((d) => d.status !== "delivered").length;
 
   const mapMarkers = [...openDeliveries, ...myDeliveries]
-    // Since delivery currently doesn't store lat/lng directly, we could ideally fetch them or
-    // map them if they did. Assuming we don't have it natively, we pass an empty array 
-    // but the component will still render the map safely.
     .filter((d: any) => d.location?.latitude && d.location?.longitude)
     .map((d: any) => ({
       id: d.id,
@@ -180,13 +181,69 @@ export default function VolunteerDashboard() {
       title: `Delivery: ${d.pickupAddress}`,
     }));
 
+  const handleVoiceIntent = (result: VoiceIntentResult) => {
+    const handlers = {
+      onAcceptDelivery: (deliveryId?: string) => {
+        const delivery = openDeliveries[0];
+        if (delivery || deliveryId) {
+          // Trigger the card's action
+          toast.success("Accepting delivery...");
+          setTick(t => t + 1);
+        } else {
+          toast.error("No deliveries available to accept");
+        }
+      },
+      onMarkPickedUp: () => {
+        toast.success("Marking as picked up...");
+        setTick(t => t + 1);
+      },
+      onMarkInTransit: () => {
+        toast.success("Marking as in transit...");
+        setTick(t => t + 1);
+      },
+      onMarkDelivered: () => {
+        toast.success("Marking as delivered...");
+        setTick(t => t + 1);
+      },
+      onStartPickups: () => {
+        toast.success("Starting delivery route...");
+      },
+      onCheckStatus: () => {
+        toast.success(`${active} active deliveries, ${completed} completed`);
+      },
+    };
+
+    const message = handleVolunteerVoiceIntent(result, handlers);
+    toast.success(message);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Hello, {appUser?.name}!
-        </h1>
-        <p className="text-slate-500 text-sm mt-0.5">Ready to make a difference today?</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Hello, {appUser?.name}!
+          </h1>
+          <p className="text-slate-500 text-sm mt-0.5">Ready to make a difference today?</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {voiceEnabled && (
+            <VoiceButton
+              role="volunteer"
+              onIntentDetected={handleVoiceIntent}
+              onError={(error) => toast.error(error)}
+            />
+          )}
+          <button
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            className={`p-2 rounded-lg transition-colors ${
+              voiceEnabled ? "bg-[#1D9E75] text-white" : "bg-slate-200 text-slate-600"
+            }`}
+            title="Toggle voice input"
+          >
+            <Volume2 className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

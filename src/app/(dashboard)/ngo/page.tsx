@@ -1,21 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useNgoRequests } from "@/hooks/use-requests";
 import { ImpactCounter } from "@/components/impact-counter";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { VoiceButton } from "@/components/voice-button";
 import MapComponent from "@/components/ui/map";
 import { formatTimestamp, urgencyColor, timeFromNow } from "@/lib/utils";
-import { Users, Package, Clock, CheckCircle, Plus } from "lucide-react";
+import { Users, Package, Clock, CheckCircle, Plus, Volume2 } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "@/context/language-context";
+import { handleNgoVoiceIntent } from "@/lib/services/voice-intent-handlers";
+import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
+import toast from "react-hot-toast";
 
 export default function NgoDashboard() {
   const { appUser } = useAuth();
   const { t } = useTranslation();
   const { requests, loading } = useNgoRequests(appUser?.uid);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   const delivered = requests.filter((r) => r.status === "delivered").length;
   const active = requests.filter((r) => !["delivered", "failed"].includes(r.status)).length;
@@ -30,6 +36,29 @@ export default function NgoDashboard() {
       title: `${req.servingsNeeded} servings needed`,
     }));
 
+  const handleVoiceIntent = (result: VoiceIntentResult) => {
+    const handlers = {
+      onCreateRequest: (params: any) => {
+        if (params.quantity) {
+          toast.success(`Creating request for ${params.quantity} servings...`);
+          setTimeout(() => window.location.href = "/ngo/request", 500);
+        } else {
+          window.location.href = "/ngo/request";
+        }
+      },
+      onFindFood: () => {
+        toast.success("Showing available food nearby...");
+        // Could implement filtered view here
+      },
+      onCheckStatus: () => {
+        toast.success(`You have ${active} active requests`);
+      },
+    };
+
+    const message = handleNgoVoiceIntent(result, handlers);
+    toast.success(message);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -39,12 +68,30 @@ export default function NgoDashboard() {
           </h1>
           <p className="text-slate-500 text-sm mt-0.5">Your food redistribution dashboard</p>
         </div>
-        <Link href="/ngo/request">
-          <Button size="lg">
-            <Plus className="h-4 w-4" />
-            Request Food
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {voiceEnabled && (
+            <VoiceButton
+              role="ngo"
+              onIntentDetected={handleVoiceIntent}
+              onError={(error) => toast.error(error)}
+            />
+          )}
+          <button
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            className={`p-2 rounded-lg transition-colors ${
+              voiceEnabled ? "bg-[#1D9E75] text-white" : "bg-slate-200 text-slate-600"
+            }`}
+            title="Toggle voice input"
+          >
+            <Volume2 className="h-5 w-5" />
+          </button>
+          <Link href="/ngo/request">
+            <Button size="lg">
+              <Plus className="h-4 w-4" />
+              Request Food
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

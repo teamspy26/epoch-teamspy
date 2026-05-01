@@ -13,15 +13,18 @@ import { ImpactCounter } from "@/components/impact-counter";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { VoiceButton } from "@/components/voice-button";
 import MapComponent from "@/components/ui/map";
 import { formatTimestamp, timeFromNow } from "@/lib/utils";
 import {
   AlertTriangle, Package, Users, Activity, CheckCircle,
-  Bot, Truck, ShieldCheck, Bell, TrendingUp, Zap, MessageCircle,
+  Bot, Truck, ShieldCheck, Bell, TrendingUp, Zap, MessageCircle, Volume2,
 } from "lucide-react";
 import type { Escalation, FoodRequest, FoodListing } from "@/lib/types";
 import { Timestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
+import { handleAdminVoiceIntent } from "@/lib/services/voice-intent-handlers";
+import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
 
 const escalationLabels: Record<string, string> = {
   no_restaurant_response: "Restaurant no response",
@@ -58,6 +61,7 @@ export default function AdminDashboard() {
   const [resolving, setResolving] = useState<string | null>(null);
   const [logsExpanded, setLogsExpanded] = useState(false);
   const [testingWA, setTestingWA] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   useEffect(() => {
     const unsub = subscribeToEscalations(setEscalations, (err) => {
@@ -109,6 +113,35 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleVoiceIntent = (result: VoiceIntentResult) => {
+    const handlers = {
+      onShowStats: () => {
+        toast.success(`${pendingRequests.length} pending requests, ${availableListings.length} available listings, ${escalations.length} escalations`);
+      },
+      onListEscalations: () => {
+        if (escalations.length === 0) {
+          toast.success("No escalations. System running smoothly.");
+        } else {
+          toast.success(`${escalations.length} escalations to review`);
+        }
+      },
+      onResolveEscalation: (escalationId?: string) => {
+        const escalation = escalations[0];
+        if (escalation || escalationId) {
+          resolveEscalation(escalation?.id || escalationId!, "Resolved by voice command");
+        } else {
+          toast.error("No escalations to resolve");
+        }
+      },
+      onCheckStatus: () => {
+        toast.success(`System Live - ${agentLogs.length} agent events`);
+      },
+    };
+
+    const message = handleAdminVoiceIntent(result, handlers);
+    toast.success(message);
+  };
+
   const openCount = escalations.length;
 
   const mapMarkers = [
@@ -139,10 +172,28 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">Admin Operations</h1>
           <p className="text-slate-500 text-sm mt-0.5">System health and escalation management</p>
         </div>
-        <Button size="sm" variant="outline" onClick={testWhatsApp} loading={testingWA}>
-          <MessageCircle className="h-4 w-4" />
-          Test WhatsApp
-        </Button>
+        <div className="flex items-center gap-2">
+          {voiceEnabled && (
+            <VoiceButton
+              role="admin"
+              onIntentDetected={handleVoiceIntent}
+              onError={(error) => toast.error(error)}
+            />
+          )}
+          <button
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            className={`p-2 rounded-lg transition-colors ${
+              voiceEnabled ? "bg-[#1D9E75] text-white" : "bg-slate-200 text-slate-600"
+            }`}
+            title="Toggle voice input"
+          >
+            <Volume2 className="h-5 w-5" />
+          </button>
+          <Button size="sm" variant="outline" onClick={testWhatsApp} loading={testingWA}>
+            <MessageCircle className="h-4 w-4" />
+            Test WhatsApp
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
