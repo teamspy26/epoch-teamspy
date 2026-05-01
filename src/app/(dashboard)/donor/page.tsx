@@ -14,12 +14,20 @@ import {
   Leaf, Info, UtensilsCrossed, RefreshCw,
 } from "lucide-react";
 import { VoiceInput } from "@/components/voice-input";
+import { VoiceButton } from "@/components/voice-button";
 import { useTranslation } from "@/context/language-context";
 import toast from "react-hot-toast";
 
 const langMap: Record<string, string> = {
   en: "en-IN", kn: "kn-IN", hi: "hi-IN", te: "te-IN", ta: "ta-IN",
 };
+interface VoiceIntentResult {
+  intent: string;
+  confidence: number;
+  parameters: Record<string, unknown>;
+  rawTranscript: string;
+  response?: string;
+}
 
 type ScanResult = {
   safe: boolean;
@@ -41,7 +49,7 @@ const freshnessColor: Record<string, string> = {
 
 export default function DonorDashboard() {
   const { appUser } = useAuth();
-  const { language } = useTranslation();
+  const { language, t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -163,32 +171,50 @@ export default function DonorDashboard() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  function handleVoiceIntent(result: VoiceIntentResult) {
+    // Handle voice commands for donor dashboard
+    if (result.intent === "approve_match" || result.intent === "accept_delivery") {
+      // Trigger donation if result is ready
+      if (result && !donated) {
+        handleDonate();
+      }
+    }
+  }
+
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Leaf className="h-6 w-6 text-[#1D9E75]" />
-          Hello, {appUser?.name}!
-        </h1>
-        <p className="text-slate-500 text-sm mt-0.5">
-          Snap your food, our AI checks it, and it reaches someone in need. 🙏
-        </p>
+      {/* Header with Voice Button */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <Leaf className="h-6 w-6 text-[#1D9E75]" />
+            {t("Donor.Hello")} {appUser?.name}!
+          </h1>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {t("Donor.Subtitle")} 🙏
+          </p>
+        </div>
+        <VoiceButton
+          role="donor"
+          language={langMap[language] ?? "en-IN"}
+          onIntentDetected={handleVoiceIntent}
+          onError={(err) => toast.error(err)}
+        />
       </div>
 
       {/* How it works */}
       <div className="grid grid-cols-3 gap-3 text-center">
         {[
-          { icon: Camera, label: "Photo food", step: "1" },
-          { icon: Sparkles, label: "AI checks it", step: "2" },
-          { icon: UtensilsCrossed, label: "Listed for pickup", step: "3" },
-        ].map(({ icon: Icon, label, step }) => (
+          { icon: Camera, labelKey: "Donor.StepPhoto", step: "1" },
+          { icon: Sparkles, labelKey: "Donor.StepAI", step: "2" },
+          { icon: UtensilsCrossed, labelKey: "Donor.StepListed", step: "3" },
+        ].map(({ icon: Icon, labelKey, step }) => (
           <div key={step} className="bg-white rounded-2xl border border-slate-100 p-3">
             <div className="h-9 w-9 rounded-xl bg-[#1D9E75]/10 flex items-center justify-center mx-auto mb-2">
               <Icon className="h-4 w-4 text-[#1D9E75]" />
             </div>
-            <p className="text-xs font-medium text-slate-700">{label}</p>
-            <p className="text-xs text-slate-400">Step {step}</p>
+            <p className="text-xs font-medium text-slate-700">{t(labelKey as Parameters<typeof t>[0])}</p>
+            <p className="text-xs text-slate-400">{t("Donor.Step")} {step}</p>
           </div>
         ))}
       </div>
@@ -198,7 +224,7 @@ export default function DonorDashboard() {
         <CardHeader>
           <h2 className="font-semibold text-slate-900 flex items-center gap-2">
             <Camera className="h-4 w-4 text-[#1D9E75]" />
-            Donate Food
+            {t("Donor.DonateFoodTitle")}
           </h2>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -221,8 +247,8 @@ export default function DonorDashboard() {
                 <Upload className="h-6 w-6 text-slate-400 group-hover:text-[#1D9E75]" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-slate-700">Tap to take photo or upload</p>
-                <p className="text-xs text-slate-400 mt-1">Works with leftovers, cooked meals, raw produce</p>
+                <p className="text-sm font-medium text-slate-700">{t("Donor.UploadTap")}</p>
+                <p className="text-xs text-slate-400 mt-1">{t("Donor.UploadHint")}</p>
               </div>
             </button>
           ) : (
@@ -243,6 +269,22 @@ export default function DonorDashboard() {
             </div>
           )}
 
+          {/* Address input (always visible once photo uploaded) */}
+          {preview && !donated && (
+            <div className="flex flex-col gap-1.5">
+              <Input
+                label={t("Donor.PickupAddress")}
+                placeholder="e.g. 12, MG Road, Bangalore"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <VoiceInput
+                languageCode={langMap[language] ?? "en-IN"}
+                onTranscript={(text) => setAddress((prev) => prev ? `${prev} ${text}` : text)}
+              />
+            </div>
+          )}
+
           {/* Scan button */}
           {preview && !result && !donated && (
             <div className="space-y-2">
@@ -253,7 +295,7 @@ export default function DonorDashboard() {
                 disabled={scanning}
               >
                 <Sparkles className="h-4 w-4" />
-                {scanning ? scanStep || "Scanning…" : "Scan with AI"}
+                {scanning ? scanStep || "Scanning…" : t("Donor.ScanWithAI")}
               </Button>
               {scanning && (
                 <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
@@ -275,7 +317,7 @@ export default function DonorDashboard() {
                   }
                   <div className="flex-1">
                     <p className={`font-semibold text-sm ${result.safe ? "text-emerald-800" : "text-red-800"}`}>
-                      {result.safe ? "✓ Safe to donate!" : "Not suitable for donation"}
+                      {result.safe ? t("Donor.SafeToDonate") : t("Donor.NotSuitable")}
                     </p>
                     <p className="text-sm text-slate-600 mt-1">{result.recommendation}</p>
                   </div>
@@ -286,22 +328,22 @@ export default function DonorDashboard() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
                   <p className="text-lg font-bold text-slate-900">{result.estimatedServings}</p>
-                  <p className="text-xs text-slate-500">servings</p>
+                  <p className="text-xs text-slate-500">{t("Donor.Servings")}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
                   <p className={`text-sm font-bold capitalize ${freshnessColor[result.freshness] ?? "text-slate-700"}`}>
                     {result.freshness}
                   </p>
-                  <p className="text-xs text-slate-500">freshness</p>
+                  <p className="text-xs text-slate-500">{t("Donor.Freshness")}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-slate-700 capitalize">{result.confidence}</p>
-                  <p className="text-xs text-slate-500">confidence</p>
+                  <p className="text-xs text-slate-500">{t("Donor.Confidence")}</p>
                 </div>
               </div>
 
               <div className="bg-white rounded-xl border border-slate-100 px-4 py-3">
-                <p className="text-xs text-slate-500 mb-1">Detected</p>
+                <p className="text-xs text-slate-500 mb-1">{t("Donor.Detected")}</p>
                 <p className="text-sm font-semibold text-slate-900">{result.foodName}</p>
               </div>
 
@@ -312,29 +354,17 @@ export default function DonorDashboard() {
                 </div>
               )}
 
-              {/* Confirm donation */}
+              {/* Confirm button — shown when food is safe */}
               {result.safe && (
-                <div className="space-y-3 pt-1">
-                  <Input
-                    label="Your pickup address *"
-                    placeholder="e.g. 12, MG Road, Bangalore"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                  <VoiceInput
-                    languageCode={langMap[language] ?? "en-IN"}
-                    onTranscript={(t) => setAddress((prev) => prev ? `${prev} ${t}` : t)}
-                  />
-                  <Button className="w-full" size="lg" onClick={handleDonate} loading={donating}>
-                    <UtensilsCrossed className="h-4 w-4" />
-                    Confirm Donation
-                  </Button>
-                </div>
+                <Button className="w-full" size="lg" onClick={handleDonate} loading={donating}>
+                  <UtensilsCrossed className="h-4 w-4" />
+                  {t("Donor.ConfirmDonation")}
+                </Button>
               )}
 
               {!result.safe && (
                 <Button variant="outline" className="w-full" onClick={reset}>
-                  Try a different photo
+                  {t("Donor.TryDifferent")}
                 </Button>
               )}
             </div>
@@ -346,15 +376,15 @@ export default function DonorDashboard() {
               <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
                 <CheckCircle className="h-7 w-7 text-emerald-600" />
               </div>
-              <p className="font-semibold text-emerald-800 text-lg">Food listed! 🙏</p>
+              <p className="font-semibold text-emerald-800 text-lg">{t("Donor.FoodListed")} 🙏</p>
               <p className="text-sm text-emerald-700 mt-1">
-                Your <strong>{result?.foodName}</strong> ({result?.estimatedServings} servings) is now available for pickup. A volunteer will be assigned shortly.
+                Your <strong>{result?.foodName}</strong> ({result?.estimatedServings} {t("Donor.Servings")}) is now available for pickup.
               </p>
               <button
                 onClick={reset}
                 className="mt-4 text-sm text-[#1D9E75] font-medium hover:underline"
               >
-                Donate more food →
+                {t("Donor.DonateMore")}
               </button>
             </div>
           )}

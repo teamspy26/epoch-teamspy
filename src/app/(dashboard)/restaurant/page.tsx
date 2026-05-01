@@ -112,7 +112,7 @@ export default function RestaurantDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">
             {appUser?.orgName ?? appUser?.name}
           </h1>
-          <p className="text-slate-500 text-sm mt-0.5">Your surplus food dashboard</p>
+          <p className="text-slate-500 text-sm mt-0.5">{t("Dash.RestaurantSubtitle")}</p>
         </div>
         <div className="flex items-center gap-3">
           {voiceEnabled && (
@@ -134,7 +134,7 @@ export default function RestaurantDashboard() {
           <Link href="/restaurant/new-listing">
             <Button size="lg">
               <Plus className="h-4 w-4" />
-              Add Surplus
+              {t("Dash.AddSurplus")}
             </Button>
           </Link>
         </div>
@@ -175,7 +175,7 @@ export default function RestaurantDashboard() {
             <div className="flex items-center gap-2 text-[#EF9F27]">
               <Bell className="h-5 w-5" />
               <h2 className="font-semibold text-slate-900">
-                Approval Needed ({pendingMatches.length})
+                {t("Dash.ApprovalNeeded")} ({pendingMatches.length})
               </h2>
             </div>
           </CardHeader>
@@ -190,7 +190,7 @@ export default function RestaurantDashboard() {
                     <div>
                       <p className="font-semibold text-slate-900">{match.ngoName}</p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        SLA deadline: {timeFromNow(match.slaDeadline)}
+                        {t("Dash.SLADeadline")} {timeFromNow(match.slaDeadline)}
                       </p>
                     </div>
                     <StatusBadge status={match.status} />
@@ -201,7 +201,7 @@ export default function RestaurantDashboard() {
                       onClick={() => handleApproval(match.id, true)}
                       loading={approving === match.id}
                     >
-                      Approve
+                      {t("Dash.Approve")}
                     </Button>
                     <Button
                       size="sm"
@@ -209,7 +209,7 @@ export default function RestaurantDashboard() {
                       onClick={() => handleApproval(match.id, false)}
                       disabled={approving === match.id}
                     >
-                      Decline
+                      {t("Dash.Decline")}
                     </Button>
                   </div>
                 </div>
@@ -233,9 +233,9 @@ export default function RestaurantDashboard() {
             ) : listings.length === 0 ? (
               <div className="text-center py-12">
                 <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 text-sm">No listings yet.</p>
+                <p className="text-slate-500 text-sm">{t("Dash.NoListings")}</p>
                 <Link href="/restaurant/new-listing">
-                  <Button variant="outline" className="mt-4">Add your first surplus listing</Button>
+                  <Button variant="outline" className="mt-4">{t("Dash.AddFirstListing")}</Button>
                 </Link>
               </div>
             ) : (
@@ -247,11 +247,11 @@ export default function RestaurantDashboard() {
                         <StatusBadge status={listing.status} />
                       </div>
                       <p className="text-sm font-medium text-slate-900">
-                        {listing.totalServings} servings ·{" "}
+                        {listing.totalServings} {t("Dash.Servings")} ·{" "}
                         {listing.foodItems.map((f) => f.name).join(", ")}
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Expires {timeFromNow(listing.expiryTime)}
+                        {t("Dash.Expires")} {timeFromNow(listing.expiryTime)}
                       </p>
                     </div>
                     <p className="text-xs text-slate-400">{formatTimestamp(listing.createdAt)}</p>
@@ -264,7 +264,7 @@ export default function RestaurantDashboard() {
 
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">Listing Locations</h2>
+            <h2 className="font-semibold text-slate-900">{t("Dash.ListingLocations")}</h2>
           </CardHeader>
           <CardContent>
             {loading ? (

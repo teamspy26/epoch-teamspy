@@ -1,15 +1,24 @@
 /**
  * useVoiceInput Hook
- * Handles audio recording, transcription, and intent detection
+ * Handles audio recording, transcription, intent detection, and TTS response
+ * Uses the existing /api/voice endpoint for full pipeline
  */
 
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { processVoiceCommand, VoiceIntentResult } from "@/lib/services/sarvam-ai";
 
-export interface UseVoiceInputOptions {
-  role: "ngo" | "restaurant" | "volunteer" | "admin";
+interface VoiceIntentResult {
+  intent: string;
+  confidence: number;
+  parameters: Record<string, unknown>;
+  rawTranscript: string;
+  response?: string;
+  audioBase64?: string;
+}
+
+interface UseVoiceInputOptions {
+  role: "ngo" | "restaurant" | "volunteer" | "admin" | "donor" | "supplier";
   language?: string;
   onSuccess?: (result: VoiceIntentResult) => void;
   onError?: (error: string) => void;
@@ -62,17 +71,49 @@ export function useVoiceInput(options: UseVoiceInputOptions): UseVoiceInputRetur
           // Create audio blob
           const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
 
-          // Process voice command
-          const result = await processVoiceCommand(audioBlob, role, language);
+          // Send to /api/voice endpoint (existing full pipeline)
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "recording.webm");
+          formData.append("role", role);
+          formData.append("language_code", language);
 
-          if (result.error) {
-            const errorMsg = result.error || "Failed to process voice command";
-            setLastError(errorMsg);
-            onError?.(errorMsg);
-          } else {
-            setLastResult(result);
-            setLastError(null);
-            onSuccess?.(result);
+          const response = await fetch("/api/voice", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const data = (await response.json().catch(() => ({ error: "Unknown error" }))) as {
+              error?: string;
+              detail?: string;
+            };
+            throw new Error(data.error || data.detail || "Voice processing failed");
+          }
+
+          const data = (await response.json()) as {
+            transcript?: string;
+            intent?: string;
+            confidence?: number;
+            parameters?: Record<string, unknown>;
+            answerText?: string;
+            audioBase64?: string;
+          };
+
+          const result: VoiceIntentResult = {
+            intent: data.intent || "unknown",
+            confidence: data.confidence || 0,
+            parameters: data.parameters || {},
+            rawTranscript: data.transcript || "",
+            response: data.answerText,
+          };
+
+          setLastResult(result);
+          setLastError(null);
+          onSuccess?.(result);
+
+          // Play audio response if available
+          if (data.audioBase64) {
+            playAudioResponse(data.audioBase64);
           }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : "Processing failed";
@@ -131,4 +172,29 @@ export function useVoiceInput(options: UseVoiceInputOptions): UseVoiceInputRetur
     toggleRecording,
     clearResult,
   };
+}
+
+/**
+ * Play audio response using Web Audio API
+ */
+function playAudioResponse(base64Audio: string) {
+  try {
+    // Decode base64 to binary
+    const binaryString = atob(base64Audio);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Create blob and play
+    const blob = new Blob([bytes], { type: "audio/wav" });
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+    audio.play().catch((err) => console.warn("[Audio playback]", err));
+
+    // Clean up URL after playback
+    audio.onended = () => URL.revokeObjectURL(audioUrl);
+  } catch (err) {
+    console.warn("[Audio response playback error]", err);
+  }
 }

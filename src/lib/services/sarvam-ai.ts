@@ -23,31 +23,28 @@ export async function transcribeAudio(
 ): Promise<TranscriptionResult> {
   try {
     const formData = new FormData();
-    formData.append("file", audioBlob, "audio.wav");
+    formData.append("audio", audioBlob, "audio.webm");
     formData.append("language_code", language);
 
-    const response = await fetch("https://api.sarvam.ai/speech-to-text", {
+    const response = await fetch("/api/voice", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SARVAM_API_KEY}`,
-      },
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData?.error || "Transcription failed");
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.detail || "Transcription failed");
     }
 
-    const data = (await response.json()) as SarvamTranscribeResponse;
+    const data = await response.json();
     return {
       success: true,
       transcript: data.transcript,
-      language: data.language,
-      duration: data.duration,
+      language: language,
+      duration: 0, // Backend might not provide duration
     };
   } catch (error) {
-    console.error("[Sarvam] Transcription error:", error);
+    console.error("[Voice] Transcription error:", error);
     return {
       success: false,
       transcript: "",
@@ -223,4 +220,19 @@ export async function processVoiceCommand(
   const intentResult = detectIntent(transcriptionResult.transcript, role);
 
   return intentResult;
+}
+
+/**
+ * Map role names from different dashboard types
+ */
+export function normalizeRole(role: string): "ngo" | "restaurant" | "volunteer" | "admin" {
+  const roleMap: Record<string, "ngo" | "restaurant" | "volunteer" | "admin"> = {
+    ngo: "ngo",
+    restaurant: "restaurant",
+    donor: "restaurant", // Donor dashboard uses restaurant role
+    supplier: "restaurant",
+    volunteer: "volunteer",
+    admin: "admin",
+  };
+  return roleMap[role.toLowerCase()] || "volunteer";
 }

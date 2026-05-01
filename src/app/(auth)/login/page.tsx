@@ -9,6 +9,7 @@ import { Input, Select } from "@/components/ui/input";
 import { Leaf, Phone, ShieldCheck } from "lucide-react";
 import type { UserRole } from "@/lib/types";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/context/language-context";
 
 const roleRedirects: Record<UserRole, string> = {
   ngo: "/ngo",
@@ -21,6 +22,7 @@ const roleRedirects: Record<UserRole, string> = {
 
 export default function LoginPage() {
   const { sendOtp, confirmOtp, createProfile } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -31,6 +33,7 @@ export default function LoginPage() {
   const [role, setRole] = useState<UserRole>(preselectedRole);
   const [name, setName] = useState("");
   const [orgName, setOrgName] = useState("");
+  const [email, setEmail] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +93,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       // User is already authenticated — just create the Firestore profile doc
-      await createProfile(role, name, orgName || undefined);
+      await createProfile(role, name, orgName || undefined, email || undefined);
       toast.success("Welcome to Prasadam!");
       router.push(roleRedirects[role]);
     } catch {
@@ -117,18 +120,18 @@ export default function LoginPage() {
             <div className="space-y-5">
               <div className="text-center mb-6">
                 <Phone className="h-8 w-8 text-[#1D9E75] mx-auto mb-2" />
-                <h2 className="text-xl font-semibold text-slate-900">Sign in with phone</h2>
-                <p className="text-sm text-slate-500 mt-1">We'll send you a one-time code</p>
+                <h2 className="text-xl font-semibold text-slate-900">{t("Login.SignInPhone")}</h2>
+                <p className="text-sm text-slate-500 mt-1">{t("Login.OTPSent")}</p>
               </div>
               <Input
-                label="Phone Number"
+                label={t("Login.PhoneLabel")}
                 placeholder="+91XXXXXXXXXX"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 type="tel"
               />
               <Button className="w-full" size="lg" onClick={handleSendOtp} loading={loading}>
-                Send OTP
+                {t("Login.SendOTP")}
               </Button>
             </div>
           )}
@@ -137,8 +140,8 @@ export default function LoginPage() {
             <div className="space-y-5">
               <div className="text-center mb-6">
                 <ShieldCheck className="h-8 w-8 text-[#1D9E75] mx-auto mb-2" />
-                <h2 className="text-xl font-semibold text-slate-900">Enter OTP</h2>
-                <p className="text-sm text-slate-500 mt-1">Sent to {phone}</p>
+                <h2 className="text-xl font-semibold text-slate-900">{t("Login.EnterOTP")}</h2>
+                <p className="text-sm text-slate-500 mt-1">{t("Login.OTPSentTo")} {phone}</p>
               </div>
               <Input
                 label="6-digit OTP"
@@ -150,13 +153,13 @@ export default function LoginPage() {
                 autoFocus
               />
               <Button className="w-full" size="lg" onClick={handleConfirmOtp} loading={loading}>
-                Verify OTP
+                {t("Login.VerifyOTP")}
               </Button>
               <button
                 className="w-full text-sm text-slate-500 hover:text-[#1D9E75]"
                 onClick={() => { setStep("phone"); setOtp(""); }}
               >
-                Use a different number
+                {t("Login.UseDifferent")}
               </button>
             </div>
           )}
@@ -164,11 +167,11 @@ export default function LoginPage() {
           {step === "profile" && (
             <div className="space-y-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold text-slate-900">Complete your profile</h2>
-                <p className="text-sm text-slate-500 mt-1">Tell us who you are</p>
+                <h2 className="text-xl font-semibold text-slate-900">{t("Login.CompleteProfile")}</h2>
+                <p className="text-sm text-slate-500 mt-1">{t("Login.TellUs")}</p>
               </div>
               <Select
-                label="I am a..."
+                label={t("Login.IAmA")}
                 value={role}
                 onChange={(e) => setRole(e.target.value as UserRole)}
               >
@@ -180,22 +183,29 @@ export default function LoginPage() {
                 <option value="beneficiary">Beneficiary</option>
               </Select>
               <Input
-                label="Your Name"
-                placeholder="Full name"
+                label={t("Login.YourName")}
+                placeholder={t("Login.FullName")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoFocus
               />
               {(role === "ngo" || role === "restaurant") && (
                 <Input
-                  label="Organisation Name"
+                  label={t("Login.OrgName")}
                   placeholder="e.g. Akshaya Patra, Hotel Taj"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                 />
               )}
+              <Input
+                label={t("Login.EmailLabel")}
+                placeholder="you@example.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
               <Button className="w-full" size="lg" onClick={handleCompleteProfile} loading={loading}>
-                Get Started
+                {t("Login.GetStarted")}
               </Button>
             </div>
           )}

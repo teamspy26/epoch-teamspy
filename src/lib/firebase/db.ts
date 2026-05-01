@@ -92,6 +92,11 @@ export function subscribeToListings(restaurantId: string, cb: (listings: FoodLis
   return onSnapshot(q, (s) => cb(byCreatedAtDesc(snap<FoodListing>(s))));
 }
 
+export async function getListingById(id: string): Promise<FoodListing | null> {
+  const s = await getDoc(doc(db, COLLECTIONS.LISTINGS, id));
+  return s.exists() ? ({ id: s.id, ...s.data() } as FoodListing) : null;
+}
+
 // ── Food Requests ─────────────────────────────────────────────────────────────
 export async function createRequest(data: Omit<FoodRequest, "id" | "createdAt">): Promise<string> {
   const ref = await addDoc(collection(db, COLLECTIONS.REQUESTS), {

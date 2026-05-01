@@ -23,7 +23,7 @@ const langMap: Record<string, string> = {
 
 export default function RequestFoodPage() {
   const { appUser } = useAuth();
-  const { language } = useTranslation();
+  const { language, t } = useTranslation();
   const router = useRouter();
 
   const [servings, setServings] = useState("");
@@ -90,8 +90,8 @@ export default function RequestFoodPage() {
           <ArrowLeft className="h-5 w-5 text-slate-600" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Request Food</h1>
-          <p className="text-sm text-slate-500">Tell us what you need</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("Form.RequestFood")}</h1>
+          <p className="text-sm text-slate-500">{t("Form.RequestSubtitle")}</p>
         </div>
       </div>
 
@@ -99,14 +99,14 @@ export default function RequestFoodPage() {
         <CardHeader>
           <div className="flex items-center gap-2 text-[#1D9E75]">
             <Utensils className="h-5 w-5" />
-            <span className="font-semibold">Food Request Details</span>
+            <span className="font-semibold">{t("Form.RequestFood")}</span>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Servings needed *"
+                label={`${t("Form.ServingsNeeded")} *`}
                 type="number"
                 min="1"
                 placeholder="50"
@@ -114,7 +114,7 @@ export default function RequestFoodPage() {
                 onChange={(e) => setServings(e.target.value)}
               />
               <Input
-                label="Beneficiary count *"
+                label={`${t("Form.BeneficiaryCount")} *`}
                 type="number"
                 min="1"
                 placeholder="50"
@@ -124,7 +124,7 @@ export default function RequestFoodPage() {
             </div>
 
             <Select
-              label="Urgency level"
+              label={t("Form.Urgency")}
               value={urgency}
               onChange={(e) => setUrgency(e.target.value as UrgencyLevel)}
             >
@@ -148,34 +148,34 @@ export default function RequestFoodPage() {
 
             <div className="flex flex-col gap-1.5">
               <Input
-                label="Pickup / delivery address *"
+                label={`${t("Form.PickupAddress")} *`}
                 placeholder="Full address where food should be delivered"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
               <VoiceInput
                 languageCode={langMap[language] ?? "en-IN"}
-                onTranscript={(t) => setAddress((prev) => prev ? `${prev} ${t}` : t)}
+                onTranscript={(text) => setAddress((prev) => prev ? `${prev} ${text}` : text)}
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700">Notes (optional)</label>
+              <label className="text-sm font-medium text-slate-700">{t("Form.Notes")}</label>
               <textarea
                 rows={3}
-                placeholder="Dietary restrictions, special requirements..."
+                placeholder={t("Form.NotesHint")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1D9E75] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]/20 transition resize-none"
               />
               <VoiceInput
                 languageCode={langMap[language] ?? "en-IN"}
-                onTranscript={(t) => setNotes((prev) => prev ? `${prev} ${t}` : t)}
+                onTranscript={(text) => setNotes((prev) => prev ? `${prev} ${text}` : text)}
               />
             </div>
 
             <Button type="submit" className="w-full" size="lg" loading={loading}>
-              Submit Request
+              {t("Form.SubmitRequest")}
             </Button>
           </form>
         </CardContent>

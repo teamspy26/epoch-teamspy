@@ -25,6 +25,7 @@ import { Timestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { handleAdminVoiceIntent } from "@/lib/services/voice-intent-handlers";
 import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
+import { useTranslation } from "@/context/language-context";
 
 const escalationLabels: Record<string, string> = {
   no_restaurant_response: "Restaurant no response",
@@ -54,6 +55,7 @@ function agentTimestamp(ts?: Timestamp): string {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [escalations, setEscalations] = useState<Escalation[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FoodRequest[]>([]);
   const [availableListings, setAvailableListings] = useState<FoodListing[]>([]);
@@ -169,8 +171,8 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Admin Operations</h1>
-          <p className="text-slate-500 text-sm mt-0.5">System health and escalation management</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("Admin.Operations")}</h1>
+          <p className="text-slate-500 text-sm mt-0.5">{t("Admin.SystemHealth")}</p>
         </div>
         <div className="flex items-center gap-2">
           {voiceEnabled && (
@@ -191,7 +193,7 @@ export default function AdminDashboard() {
           </button>
           <Button size="sm" variant="outline" onClick={testWhatsApp} loading={testingWA}>
             <MessageCircle className="h-4 w-4" />
-            Test WhatsApp
+            {t("Admin.TestWhatsApp")}
           </Button>
         </div>
       </div>
@@ -199,14 +201,14 @@ export default function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <ImpactCounter
-          label="Open escalations"
+          label={t("Admin.OpenEscalations")}
           value={openCount}
           icon={<AlertTriangle />}
           color={openCount > 0 ? "text-red-600" : "text-emerald-600"}
         />
-        <ImpactCounter label="Pending requests"  value={pendingRequests.length}  icon={<Users />}    color="text-blue-600" />
-        <ImpactCounter label="Available supply"  value={availableListings.length} icon={<Package />}  color="text-[#1D9E75]" />
-        <ImpactCounter label="System status"     value="Live"                     icon={<Activity />} color="text-emerald-600" />
+        <ImpactCounter label={t("Admin.PendingRequests")}  value={pendingRequests.length}  icon={<Users />}    color="text-blue-600" />
+        <ImpactCounter label={t("Admin.AvailableSupply")}  value={availableListings.length} icon={<Package />}  color="text-[#1D9E75]" />
+        <ImpactCounter label={t("Admin.SystemStatus")}     value="Live"                     icon={<Activity />} color="text-emerald-600" />
       </div>
 
       {/* Escalations */}
@@ -215,7 +217,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
-              <h2 className="font-semibold text-slate-900">Escalations</h2>
+              <h2 className="font-semibold text-slate-900">{t("Admin.Escalations")}</h2>
             </div>
             {openCount > 0 && (
               <span className="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
@@ -257,7 +259,7 @@ export default function AdminDashboard() {
                     onClick={() => resolveEscalation(esc.id, "Resolved by admin")}
                     loading={resolving === esc.id}
                   >
-                    Mark Resolved
+                    {t("Admin.MarkResolved")}
                   </Button>
                 </div>
               ))}
@@ -272,7 +274,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5 text-violet-500" />
-              <h2 className="font-semibold text-slate-900">Agent Activity</h2>
+              <h2 className="font-semibold text-slate-900">{t("Admin.AgentActivity")}</h2>
               {agentLogs.length > 0 && (
                 <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
@@ -287,9 +289,7 @@ export default function AdminDashboard() {
           {agentLogs.length === 0 ? (
             <div className="text-center py-10">
               <Zap className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">
-                No agent activity yet. Agents fire when food requests and listings are created.
-              </p>
+              <p className="text-sm text-slate-400">{t("Admin.NoActivity")}</p>
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -347,7 +347,7 @@ export default function AdminDashboard() {
                   onClick={() => setLogsExpanded((x) => !x)}
                   className="mt-3 text-xs text-[#1D9E75] hover:underline w-full text-center"
                 >
-                  {logsExpanded ? "Show less" : `Show all ${agentLogs.length} events`}
+                  {logsExpanded ? t("Admin.ShowLess") : `${t("Admin.ShowAll")} ${agentLogs.length} events`}
                 </button>
               )}
             </div>
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">System Map</h2>
+            <h2 className="font-semibold text-slate-900">{t("Admin.SystemMap")}</h2>
           </CardHeader>
           <CardContent>
             <MapComponent markers={mapMarkers} height="400px" />
@@ -369,12 +369,12 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <h2 className="font-semibold text-slate-900">
-              Unmatched Requests ({pendingRequests.length})
+              {t("Admin.UnmatchedRequests")} ({pendingRequests.length})
             </h2>
           </CardHeader>
           <CardContent>
             {pendingRequests.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-4">All requests matched.</p>
+              <p className="text-sm text-slate-500 text-center py-4">{t("Admin.AllMatched")}</p>
             ) : (
               <div className="divide-y divide-slate-50 max-h-[400px] overflow-auto">
                 {pendingRequests.slice(0, 10).map((req) => (

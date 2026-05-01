@@ -8,12 +8,20 @@
 import { useState, useEffect } from "react";
 import { Mic, Loader, AlertCircle, CheckCircle } from "lucide-react";
 import { useVoiceInput } from "@/hooks/use-voice-input";
-import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
+
+interface VoiceResult {
+  intent: string;
+  confidence: number;
+  parameters: Record<string, unknown>;
+  rawTranscript: string;
+  response?: string;
+  [key: string]: any; // Allow additional properties
+}
 
 interface VoiceButtonProps {
-  role: "ngo" | "restaurant" | "volunteer" | "admin";
+  role: "ngo" | "restaurant" | "volunteer" | "admin" | "donor" | "supplier";
   language?: string;
-  onIntentDetected?: (result: VoiceIntentResult) => void;
+  onIntentDetected?: (result: any) => void;
   onError?: (error: string) => void;
   className?: string;
   size?: "sm" | "md" | "lg";

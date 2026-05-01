@@ -66,7 +66,7 @@ export default function NgoDashboard() {
           <h1 className="text-2xl font-bold text-slate-900">
             Welcome, {appUser?.orgName ?? appUser?.name}
           </h1>
-          <p className="text-slate-500 text-sm mt-0.5">Your food redistribution dashboard</p>
+          <p className="text-slate-500 text-sm mt-0.5">{t("Dash.NgoSubtitle")}</p>
         </div>
         <div className="flex items-center gap-3">
           {voiceEnabled && (
@@ -88,7 +88,7 @@ export default function NgoDashboard() {
           <Link href="/ngo/request">
             <Button size="lg">
               <Plus className="h-4 w-4" />
-              Request Food
+              {t("Dash.RequestFood")}
             </Button>
           </Link>
         </div>
@@ -116,9 +116,9 @@ export default function NgoDashboard() {
             ) : requests.length === 0 ? (
               <div className="text-center py-12">
                 <Package className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 text-sm">No requests yet.</p>
+                <p className="text-slate-500 text-sm">{t("Dash.NoRequests")}</p>
                 <Link href="/ngo/request">
-                  <Button variant="outline" className="mt-4">Make your first request</Button>
+                  <Button variant="outline" className="mt-4">{t("Dash.FirstRequest")}</Button>
                 </Link>
               </div>
             ) : (
@@ -140,7 +140,7 @@ export default function NgoDashboard() {
                       {req.approvedByRestaurant && (
                         <p className="text-xs text-emerald-700 font-medium mt-0.5 flex items-center gap-1">
                           <CheckCircle className="h-3 w-3" />
-                          Approved by {req.approvedByRestaurant}
+                          {t("Dash.ApprovedBy")} {req.approvedByRestaurant}
                         </p>
                       )}
                       <p className="text-xs text-slate-500 mt-0.5">

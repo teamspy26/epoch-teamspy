@@ -21,7 +21,7 @@ interface AuthContextValue {
   // Returns whether the user already has a profile
   confirmOtp: (result: ConfirmationResult, otp: string) => Promise<{ hasProfile: boolean }>;
   // Called after confirmOtp when no profile exists yet
-  createProfile: (role: UserRole, name: string, orgName?: string) => Promise<void>;
+  createProfile: (role: UserRole, name: string, orgName?: string, email?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { hasProfile: !!profile };
   }
 
-  async function createProfile(role: UserRole, name: string, orgName?: string) {
+  async function createProfile(role: UserRole, name: string, orgName?: string, email?: string) {
     // User is already authenticated at this point — just write the Firestore doc
     const currentUser = auth.currentUser;
     if (!currentUser) throw new Error("Not authenticated");
@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       name,
       ...(orgName ? { orgName } : {}),
+      ...(email ? { email } : {}),
       verified: false,
     });
 

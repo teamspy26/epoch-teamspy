@@ -37,6 +37,7 @@ export type EscalationType =
 export interface AppUser {
   uid: string;
   phone: string;
+  email?: string;
   role: UserRole;
   name: string;
   orgName?: string;

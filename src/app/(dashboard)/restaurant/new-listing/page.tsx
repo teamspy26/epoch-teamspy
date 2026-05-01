@@ -21,7 +21,7 @@ const langMap: Record<string, string> = {
 
 export default function NewListingPage() {
   const { appUser } = useAuth();
-  const { language } = useTranslation();
+  const { language, t } = useTranslation();
   const router = useRouter();
 
   const [foodItems, setFoodItems] = useState<FoodItem[]>([{ name: "", quantity: 0, unit: "servings" }]);
@@ -103,8 +103,8 @@ export default function NewListingPage() {
           <ArrowLeft className="h-5 w-5 text-slate-600" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Add Surplus Food</h1>
-          <p className="text-sm text-slate-500">Post your surplus for redistribution</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("Form.AddSurplusTitle")}</h1>
+          <p className="text-sm text-slate-500">{t("Form.AddSurplusSubtitle")}</p>
         </div>
       </div>
 
@@ -112,24 +112,24 @@ export default function NewListingPage() {
         <CardHeader>
           <div className="flex items-center gap-2 text-[#1D9E75]">
             <UtensilsCrossed className="h-5 w-5" />
-            <span className="font-semibold">Surplus Details</span>
+            <span className="font-semibold">{t("Form.SurplusDetails")}</span>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-3">
-              <label className="text-sm font-medium text-slate-700">Food items *</label>
+              <label className="text-sm font-medium text-slate-700">{t("Form.FoodItems")}</label>
               {foodItems.map((item, i) => (
                 <div key={i} className="flex gap-2 items-end">
                   <Input
-                    placeholder="Food name"
+                    placeholder={t("Form.FoodName")}
                     value={item.name}
                     onChange={(e) => updateFoodItem(i, "name", e.target.value)}
                     className="flex-1"
                   />
                   <Input
                     type="number"
-                    placeholder="Qty"
+                    placeholder={t("Form.Qty")}
                     value={item.quantity || ""}
                     onChange={(e) => updateFoodItem(i, "quantity", parseInt(e.target.value) || 0)}
                     className="w-20"
@@ -161,12 +161,12 @@ export default function NewListingPage() {
                 onClick={addFoodItem}
                 className="flex items-center gap-1.5 text-sm text-[#1D9E75] hover:underline"
               >
-                <Plus className="h-4 w-4" /> Add item
+                <Plus className="h-4 w-4" /> {t("Form.AddItem")}
               </button>
             </div>
 
             <Input
-              label="Total servings *"
+              label={`${t("Form.TotalServings")} *`}
               type="number"
               min="1"
               placeholder="100"
@@ -175,7 +175,7 @@ export default function NewListingPage() {
             />
 
             <Select
-              label="Food valid for"
+              label={t("Form.FoodValidFor")}
               value={expiryHours}
               onChange={(e) => setExpiryHours(e.target.value)}
             >
@@ -188,19 +188,19 @@ export default function NewListingPage() {
 
             <div className="flex flex-col gap-1.5">
               <Input
-                label="Pickup address *"
+                label={`${t("Form.PickupAddress")} *`}
                 placeholder="Your restaurant address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
               <VoiceInput
                 languageCode={langMap[language] ?? "en-IN"}
-                onTranscript={(t) => setAddress((prev) => prev ? `${prev} ${t}` : t)}
+                onTranscript={(text) => setAddress((prev) => prev ? `${prev} ${text}` : text)}
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700">Notes (optional)</label>
+              <label className="text-sm font-medium text-slate-700">{t("Form.Notes")}</label>
               <textarea
                 rows={2}
                 placeholder="Packaging details, storage notes, allergens..."
@@ -210,12 +210,12 @@ export default function NewListingPage() {
               />
               <VoiceInput
                 languageCode={langMap[language] ?? "en-IN"}
-                onTranscript={(t) => setNotes((prev) => prev ? `${prev} ${t}` : t)}
+                onTranscript={(text) => setNotes((prev) => prev ? `${prev} ${text}` : text)}
               />
             </div>
 
             <Button type="submit" className="w-full" size="lg" loading={loading}>
-              Post Listing
+              {t("Form.PostListing")}
             </Button>
           </form>
         </CardContent>
