@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ConfirmationResult } from "firebase/auth";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
@@ -16,16 +16,19 @@ const roleRedirects: Record<UserRole, string> = {
   volunteer: "/volunteer",
   admin: "/admin",
   beneficiary: "/beneficiary",
+  donor: "/donor",
 };
 
 export default function LoginPage() {
   const { sendOtp, confirmOtp, createProfile } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const preselectedRole = (searchParams.get("role") as UserRole) ?? "ngo";
   const [step, setStep] = useState<"phone" | "otp" | "profile">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [role, setRole] = useState<UserRole>("ngo");
+  const [role, setRole] = useState<UserRole>(preselectedRole);
   const [name, setName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
@@ -170,8 +173,10 @@ export default function LoginPage() {
                 onChange={(e) => setRole(e.target.value as UserRole)}
               >
                 <option value="ngo">NGO / Food Bank</option>
-                <option value="restaurant">Restaurant / Food Donor</option>
+                <option value="restaurant">Restaurant / Supplier</option>
+                <option value="donor">Individual Donor</option>
                 <option value="volunteer">Volunteer</option>
+                <option value="admin">Admin / Operator</option>
                 <option value="beneficiary">Beneficiary</option>
               </Select>
               <Input

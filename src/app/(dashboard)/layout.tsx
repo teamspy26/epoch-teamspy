@@ -11,6 +11,7 @@ const roleHomePaths: Record<string, string> = {
   volunteer: "/volunteer",
   admin: "/admin",
   beneficiary: "/beneficiary",
+  donor: "/donor",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -59,9 +59,11 @@ export async function getUser(uid: string): Promise<AppUser | null> {
 }
 
 export async function createUser(uid: string, data: Omit<AppUser, "uid" | "createdAt">) {
+  // Strip undefined fields — Firestore rejects them
+  const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
   await setDoc(doc(db, COLLECTIONS.USERS, uid), {
     uid,
-    ...data,
+    ...clean,
     createdAt: serverTimestamp(),
   });
 }

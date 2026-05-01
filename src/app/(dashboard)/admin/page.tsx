@@ -7,16 +7,20 @@ import {
   updateEscalation,
   getPendingRequests,
   getAvailableListings,
-  type AgentLog,
 } from "@/lib/firebase/db";
+import type { AgentLog } from "@/lib/firebase/db";
 import { ImpactCounter } from "@/components/impact-counter";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import MapComponent from "@/components/ui/map";
 import { formatTimestamp, timeFromNow } from "@/lib/utils";
-import { AlertTriangle, Package, Users, Activity, CheckCircle, Bot, Zap, Brain, Truck, ShieldCheck, Bell, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle, Package, Users, Activity, CheckCircle,
+  Bot, Truck, ShieldCheck, Bell, TrendingUp, Zap, MessageCircle,
+} from "lucide-react";
 import type { Escalation, FoodRequest, FoodListing } from "@/lib/types";
+import { Timestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
 
 const escalationLabels: Record<string, string> = {
@@ -26,23 +30,24 @@ const escalationLabels: Record<string, string> = {
   quality_fail: "Quality check failed",
 };
 
-const AGENT_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  coordinator: { label: "Coordinator", icon: <Brain className="h-3.5 w-3.5" />, color: "bg-violet-100 text-violet-700 border-violet-200" },
-  supply:       { label: "Supply",      icon: <Package className="h-3.5 w-3.5" />, color: "bg-blue-100 text-blue-700 border-blue-200" },
-  dispatch:     { label: "Dispatch",    icon: <Truck className="h-3.5 w-3.5" />,   color: "bg-amber-100 text-amber-700 border-amber-200" },
-  escalation:   { label: "Escalation",  icon: <AlertTriangle className="h-3.5 w-3.5" />, color: "bg-red-100 text-red-700 border-red-200" },
-  quality_check:{ label: "Quality",     icon: <ShieldCheck className="h-3.5 w-3.5" />, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  notification: { label: "Notify",      icon: <Bell className="h-3.5 w-3.5" />,    color: "bg-pink-100 text-pink-700 border-pink-200" },
-  prediction:   { label: "Prediction",  icon: <TrendingUp className="h-3.5 w-3.5" />, color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
+type AgentMeta = { label: string; color: string };
+const AGENT_META: Record<string, AgentMeta> = {
+  coordinator:   { label: "Coordinator", color: "bg-violet-100 text-violet-700 border-violet-200" },
+  supply:        { label: "Supply",      color: "bg-blue-100 text-blue-700 border-blue-200" },
+  dispatch:      { label: "Dispatch",    color: "bg-amber-100 text-amber-700 border-amber-200" },
+  escalation:    { label: "Escalation",  color: "bg-red-100 text-red-700 border-red-200" },
+  quality_check: { label: "Quality",     color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  notification:  { label: "Notify",      color: "bg-pink-100 text-pink-700 border-pink-200" },
+  prediction:    { label: "Prediction",  color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
 };
 
-function agentTimestamp(log: AgentLog): string {
-  const ms = log.timestamp?.toMillis?.();
+function agentTimestamp(ts?: Timestamp): string {
+  const ms = ts?.toMillis?.();
   if (!ms) return "";
   const diff = Date.now() - ms;
-  if (diff < 60000) return `${Math.floor(diff / 1000)}s ago`;
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-  return `${Math.floor(diff / 3600000)}h ago`;
+  if (diff < 60_000) return `${Math.floor(diff / 1000)}s ago`;
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  return `${Math.floor(diff / 3_600_000)}h ago`;
 }
 
 export default function AdminDashboard() {
@@ -52,11 +57,12 @@ export default function AdminDashboard() {
   const [agentLogs, setAgentLogs] = useState<AgentLog[]>([]);
   const [resolving, setResolving] = useState<string | null>(null);
   const [logsExpanded, setLogsExpanded] = useState(false);
+  const [testingWA, setTestingWA] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeToEscalations(setEscalations, (err) => {
       console.error("[Escalations]", err);
-      toast.error("Could not load escalations — check Firestore rules.");
+      toast.error("Could not load escalations.");
     });
     return unsub;
   }, []);
@@ -64,24 +70,37 @@ export default function AdminDashboard() {
   useEffect(() => {
     const unsub = subscribeToAgentLogs(setAgentLogs, (err) => {
       console.error("[AgentLogs]", err);
-      toast.error("Could not load agent logs — check Firestore rules.");
+      toast.error("Could not load agent logs.");
     });
     return unsub;
   }, []);
 
   useEffect(() => {
-    getPendingRequests().then(setPendingRequests);
-    getAvailableListings().then(setAvailableListings);
+    getPendingRequests().then(setPendingRequests).catch(() => {});
+    getAvailableListings().then(setAvailableListings).catch(() => {});
   }, []);
+
+  async function testWhatsApp() {
+    setTestingWA(true);
+    try {
+      const res = await fetch("/api/whatsapp/test");
+      const data = await res.json();
+      if (data.success) {
+        toast.success("WhatsApp test message sent! Check your phone.");
+      } else {
+        toast.error(`WhatsApp error: ${data.error ?? data.reason ?? "unknown"}`);
+      }
+    } catch {
+      toast.error("Could not reach WhatsApp API.");
+    } finally {
+      setTestingWA(false);
+    }
+  }
 
   async function resolveEscalation(id: string, adminNote: string) {
     setResolving(id);
     try {
-      await updateEscalation(id, {
-        status: "resolved",
-        adminNote,
-        resolvedBy: "admin",
-      });
+      await updateEscalation(id, { status: "resolved", adminNote, resolvedBy: "admin" });
       toast.success("Escalation resolved.");
     } catch {
       toast.error("Failed to resolve.");
@@ -90,11 +109,11 @@ export default function AdminDashboard() {
     }
   }
 
-  const openCount = escalations.filter((e) => e.status !== "resolved").length;
+  const openCount = escalations.length;
 
   const mapMarkers = [
     ...pendingRequests
-      .filter((r: unknown) => (r as any).location?.latitude && (r as any).location?.longitude)
+      .filter((r) => (r as any).location?.latitude && (r as any).location?.longitude)
       .map((r) => ({
         id: `req-${r.id}`,
         lat: (r as any).location.latitude,
@@ -102,7 +121,7 @@ export default function AdminDashboard() {
         title: `Request: ${r.ngoName} (${r.servingsNeeded} servings)`,
       })),
     ...availableListings
-      .filter((l: unknown) => (l as any).location?.latitude && (l as any).location?.longitude)
+      .filter((l) => (l as any).location?.latitude && (l as any).location?.longitude)
       .map((l) => ({
         id: `list-${l.id}`,
         lat: (l as any).location.latitude,
@@ -111,13 +130,22 @@ export default function AdminDashboard() {
       })),
   ];
 
+  const visibleLogs = logsExpanded ? agentLogs : agentLogs.slice(0, 15);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Admin Operations</h1>
-        <p className="text-slate-500 text-sm mt-0.5">System health and escalation management</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Admin Operations</h1>
+          <p className="text-slate-500 text-sm mt-0.5">System health and escalation management</p>
+        </div>
+        <Button size="sm" variant="outline" onClick={testWhatsApp} loading={testingWA}>
+          <MessageCircle className="h-4 w-4" />
+          Test WhatsApp
+        </Button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <ImpactCounter
           label="Open escalations"
@@ -125,9 +153,9 @@ export default function AdminDashboard() {
           icon={<AlertTriangle />}
           color={openCount > 0 ? "text-red-600" : "text-emerald-600"}
         />
-        <ImpactCounter label="Pending requests" value={pendingRequests.length} icon={<Users />} color="text-blue-600" />
-        <ImpactCounter label="Available supply" value={availableListings.length} icon={<Package />} color="text-[#1D9E75]" />
-        <ImpactCounter label="System status" value="Live" icon={<Activity />} color="text-emerald-600" />
+        <ImpactCounter label="Pending requests"  value={pendingRequests.length}  icon={<Users />}    color="text-blue-600" />
+        <ImpactCounter label="Available supply"  value={availableListings.length} icon={<Package />}  color="text-[#1D9E75]" />
+        <ImpactCounter label="System status"     value="Live"                     icon={<Activity />} color="text-emerald-600" />
       </div>
 
       {/* Escalations */}
@@ -156,11 +184,7 @@ export default function AdminDashboard() {
               {escalations.map((esc) => (
                 <div
                   key={esc.id}
-                  className={`rounded-xl border p-4 ${
-                    esc.status === "resolved"
-                      ? "border-slate-100 bg-slate-50"
-                      : "border-red-100 bg-red-50/50"
-                  }`}
+                  className="rounded-xl border border-red-100 bg-red-50/50 p-4"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -176,16 +200,14 @@ export default function AdminDashboard() {
                   {esc.matchId && (
                     <p className="text-xs text-slate-500 mb-3">Match: {esc.matchId}</p>
                   )}
-                  {esc.status !== "resolved" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => resolveEscalation(esc.id, "Resolved by admin")}
-                      loading={resolving === esc.id}
-                    >
-                      Mark Resolved
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => resolveEscalation(esc.id, "Resolved by admin")}
+                    loading={resolving === esc.id}
+                  >
+                    Mark Resolved
+                  </Button>
                 </div>
               ))}
             </div>
@@ -193,7 +215,7 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Agent Activity Feed */}
+      {/* Agent Activity */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -202,7 +224,7 @@ export default function AdminDashboard() {
               <h2 className="font-semibold text-slate-900">Agent Activity</h2>
               {agentLogs.length > 0 && (
                 <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
                   Live
                 </span>
               )}
@@ -214,35 +236,44 @@ export default function AdminDashboard() {
           {agentLogs.length === 0 ? (
             <div className="text-center py-10">
               <Zap className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">No agent activity yet. Agents fire when food requests and listings are created.</p>
+              <p className="text-sm text-slate-400">
+                No agent activity yet. Agents fire when food requests and listings are created.
+              </p>
             </div>
           ) : (
-            <>
-              {/* Agent summary chips */}
+            <div className="space-y-1.5">
+              {/* Summary chips */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {Object.entries(AGENT_META).map(([key, meta]) => {
                   const count = agentLogs.filter((l) => l.agent === key).length;
                   if (count === 0) return null;
                   return (
-                    <span key={key} className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${meta.color}`}>
-                      {meta.icon}{meta.label}: {count}
+                    <span
+                      key={key}
+                      className={`text-xs font-medium px-2 py-1 rounded-full border ${meta.color}`}
+                    >
+                      {meta.label}: {count}
                     </span>
                   );
                 })}
               </div>
 
-              {/* Log entries */}
+              {/* Log rows */}
               <div className="space-y-1.5 max-h-[420px] overflow-auto">
-                {(logsExpanded ? agentLogs : agentLogs.slice(0, 15)).map((log) => {
-                  const meta = AGENT_META[log.agent] ?? { label: log.agent, icon: <Bot className="h-3.5 w-3.5" />, color: "bg-slate-100 text-slate-600 border-slate-200" };
+                {visibleLogs.map((log) => {
+                  const meta = AGENT_META[log.agent] ?? {
+                    label: log.agent,
+                    color: "bg-slate-100 text-slate-600 border-slate-200",
+                  };
                   return (
                     <div key={log.id} className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0 mt-0.5 ${meta.color}`}>
-                        {meta.icon}
+                      <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0 mt-0.5 ${meta.color}`}>
                         {meta.label}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-800">{log.action.replace(/_/g, " ")}</p>
+                        <p className="text-xs font-medium text-slate-800">
+                          {log.action.replace(/_/g, " ")}
+                        </p>
                         {log.context && Object.keys(log.context).length > 0 && (
                           <p className="text-xs text-slate-400 truncate mt-0.5">
                             {Object.entries(log.context)
@@ -252,7 +283,9 @@ export default function AdminDashboard() {
                           </p>
                         )}
                       </div>
-                      <span className="text-xs text-slate-400 flex-shrink-0">{agentTimestamp(log)}</span>
+                      <span className="text-xs text-slate-400 flex-shrink-0">
+                        {agentTimestamp(log.timestamp)}
+                      </span>
                     </div>
                   );
                 })}
@@ -266,7 +299,7 @@ export default function AdminDashboard() {
                   {logsExpanded ? "Show less" : `Show all ${agentLogs.length} events`}
                 </button>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -284,7 +317,9 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader>
-            <h2 className="font-semibold text-slate-900">Unmatched Requests ({pendingRequests.length})</h2>
+            <h2 className="font-semibold text-slate-900">
+              Unmatched Requests ({pendingRequests.length})
+            </h2>
           </CardHeader>
           <CardContent>
             {pendingRequests.length === 0 ? (

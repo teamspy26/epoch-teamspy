@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone: currentUser.phoneNumber ?? "",
       role,
       name,
-      orgName,
+      ...(orgName ? { orgName } : {}),
       verified: false,
     });
 

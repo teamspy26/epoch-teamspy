@@ -28,6 +28,7 @@ const roleHome: Record<string, string> = {
   volunteer: "/volunteer",
   admin: "/admin",
   beneficiary: "/beneficiary",
+  donor: "/donor",
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -69,7 +70,7 @@ function NavBar() {
                 {t("Sign in")}
               </Link>
               <Link
-                href="/login"
+                href="/join"
                 className="bg-[#1D9E75] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#178a63] transition"
               >
                 {t("Get started")}
@@ -222,8 +223,8 @@ return (
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/login"
-              className="flex items-center gap-2 bg-[#1D9E75] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#178a63] transition text-base w-full sm:w-auto justify-center"
+              href="/join"
+      className="flex items-center gap-2 bg-[#1D9E75] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#178a63] transition text-base w-full sm:w-auto justify-center"
             >
               Offer your Prasadam <ArrowRight className="h-4 w-4" />
             </Link>
@@ -415,29 +416,29 @@ return (
               title={t("Role.Restaurant.Title")}
               desc={t("Role.Restaurant.Desc")}
               actions={[t("Role.Restaurant.A1"), t("Role.Restaurant.A2"), t("Role.Restaurant.A3")]}
-              href="/login"
-            />
+              href="/join"
+    />
             <RoleCard
               icon={<Heart className="h-5 w-5" />}
               title={t("Role.NGO.Title")}
               desc={t("Role.NGO.Desc")}
               actions={[t("Role.NGO.A1"), t("Role.NGO.A2"), t("Role.NGO.A3")]}
-              href="/login"
-            />
+              href="/join"
+    />
             <RoleCard
               icon={<Truck className="h-5 w-5" />}
               title={t("Role.Volunteer.Title")}
               desc={t("Role.Volunteer.Desc")}
               actions={[t("Role.Volunteer.A1"), t("Role.Volunteer.A2"), t("Role.Volunteer.A3")]}
-              href="/login"
-            />
+              href="/join"
+    />
             <RoleCard
               icon={<Brain className="h-5 w-5" />}
               title={t("Role.Admin.Title")}
               desc={t("Role.Admin.Desc")}
               actions={[t("Role.Admin.A1"), t("Role.Admin.A2"), t("Role.Admin.A3")]}
-              href="/login"
-            />
+              href="/join"
+    />
           </div>
         </div>
       </section>
@@ -474,14 +475,14 @@ return (
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/login"
-              className="flex items-center gap-2 bg-[#1D9E75] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#178a63] transition text-base w-full sm:w-auto justify-center"
+              href="/join"
+      className="flex items-center gap-2 bg-[#1D9E75] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#178a63] transition text-base w-full sm:w-auto justify-center"
             >
               Join the movement <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/login"
-              className="flex items-center gap-2 border border-slate-200 text-slate-700 font-medium px-8 py-3.5 rounded-2xl hover:bg-slate-50 transition text-base w-full sm:w-auto justify-center"
+              href="/join"
+      className="flex items-center gap-2 border border-slate-200 text-slate-700 font-medium px-8 py-3.5 rounded-2xl hover:bg-slate-50 transition text-base w-full sm:w-auto justify-center"
             >
               Sign in
             </Link>

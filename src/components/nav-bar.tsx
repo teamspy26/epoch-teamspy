@@ -34,6 +34,9 @@ const roleLinks: Record<string, NavLink[]> = {
     { href: "/admin/escalations", label: "Escalations" },
     { href: "/admin/analytics", label: "Analytics" },
   ],
+  donor: [
+    { href: "/donor", label: "Donate Food" },
+  ],
   beneficiary: [{ href: "/beneficiary", label: "Meals" }],
 };
 

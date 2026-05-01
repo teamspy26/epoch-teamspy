@@ -1,6 +1,6 @@
 import { Timestamp, GeoPoint } from "firebase/firestore";
 
-export type UserRole = "ngo" | "restaurant" | "volunteer" | "admin" | "beneficiary";
+export type UserRole = "ngo" | "restaurant" | "volunteer" | "admin" | "beneficiary" | "donor";
 
 export type UrgencyLevel = "low" | "medium" | "high" | "critical";
 

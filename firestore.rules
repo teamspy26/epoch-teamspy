@@ -30,10 +30,10 @@ service cloud.firestore {
     // ── Listings ───────────────────────────────────────────────────────────────
     match /listings/{id} {
       allow read:   if isAuth();
-      allow create: if userRole() == 'restaurant';
-      allow update: if (userRole() == 'restaurant' && resource.data.restaurantId == request.auth.uid)
+      allow create: if userRole() == 'restaurant' || userRole() == 'donor';
+      allow update: if (isAuth() && resource.data.restaurantId == request.auth.uid)
                     || userRole() == 'admin';
-      allow delete: if userRole() == 'restaurant' && resource.data.restaurantId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.restaurantId == request.auth.uid;
     }
 
     // ── Requests ───────────────────────────────────────────────────────────────
