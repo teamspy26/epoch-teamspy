@@ -88,7 +88,7 @@ export default function LoginPage() {
     try {
       // User is already authenticated — just create the Firestore profile doc
       await createProfile(role, name, orgName || undefined);
-      toast.success("Welcome to ZeroHunger!");
+      toast.success("Welcome to Prasadam!");
       router.push(roleRedirects[role]);
     } catch {
       toast.error("Failed to save profile. Please try again.");
@@ -105,8 +105,8 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-[#1D9E75] text-white mb-4">
             <Leaf className="h-7 w-7" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900">ZeroHunger</h1>
-          <p className="text-slate-500 mt-2">Connecting surplus food to those who need it</p>
+          <h1 className="text-3xl font-bold text-slate-900">Prasadam</h1>
+          <p className="text-slate-500 mt-2">प्रसादम् · Blessed food, shared with all</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">

@@ -1,4 +1,4 @@
-# ZeroHunger — Claude Code Guide
+# Prasadam — Claude Code Guide
 
 ## What this project is
 A real-time food redistribution platform connecting restaurant surplus to NGOs and beneficiaries.

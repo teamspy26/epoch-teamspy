@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { useTranslation } from "@/context/language-context";
+import { LanguageSwitcher } from "./language-switcher";
 import { NotificationBell } from "./notification-bell";
 import { cn } from "@/lib/utils";
 import { LogOut, Leaf } from "lucide-react";
@@ -37,6 +39,7 @@ const roleLinks: Record<string, NavLink[]> = {
 
 export function NavBar() {
   const { appUser, signOut } = useAuth();
+  const { t } = useTranslation();
   const pathname = usePathname();
   const links = appUser ? roleLinks[appUser.role] ?? [] : [];
 
@@ -46,7 +49,7 @@ export function NavBar() {
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 font-bold text-[#1D9E75]">
             <Leaf className="h-5 w-5" />
-            <span>ZeroHunger</span>
+            <span>Prasadam</span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
             {links.map((l) => (
@@ -60,12 +63,15 @@ export function NavBar() {
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 )}
               >
-                {l.label}
+                {l.label === "Dashboard" ? t("Dashboard") : l.label === "Overview" ? t("Overview") : l.label}
               </Link>
             ))}
           </nav>
         </div>
         <div className="flex items-center gap-2">
+          <div className="w-32 mr-2">
+            <LanguageSwitcher />
+          </div>
           {appUser && <NotificationBell userId={appUser.uid} />}
           {appUser && (
             <div className="flex items-center gap-3">
@@ -76,7 +82,7 @@ export function NavBar() {
               <button
                 onClick={signOut}
                 className="p-2 rounded-xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition"
-                title="Sign out"
+                title={t("Sign out")}
               >
                 <LogOut className="h-4 w-4" />
               </button>

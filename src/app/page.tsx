@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
+import { useTranslation } from "@/context/language-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import {
   Leaf,
   ArrowRight,
@@ -32,6 +34,7 @@ const roleHome: Record<string, string> = {
 
 function NavBar() {
   const { user, appUser } = useAuth();
+  const { t } = useTranslation();
   const dashboardHref = appUser ? roleHome[appUser.role] : "/login";
 
   return (
@@ -41,32 +44,35 @@ function NavBar() {
           <div className="h-8 w-8 rounded-xl bg-[#1D9E75] flex items-center justify-center">
             <Leaf className="h-4 w-4 text-white" />
           </div>
-          ZeroHunger
+          Prasadam
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm text-slate-600">
-          <a href="#how-it-works" className="hover:text-slate-900 transition">How it works</a>
-          <a href="#agents" className="hover:text-slate-900 transition">Agents</a>
-          <a href="#roles" className="hover:text-slate-900 transition">Who it's for</a>
-          <a href="#impact" className="hover:text-slate-900 transition">Impact</a>
+          <a href="#how-it-works" className="hover:text-slate-900 transition">{t("How it works")}</a>
+          <a href="#agents" className="hover:text-slate-900 transition">{t("Agents")}</a>
+          <a href="#roles" className="hover:text-slate-900 transition">{t("Who it's for")}</a>
+          <a href="#impact" className="hover:text-slate-900 transition">{t("Impact")}</a>
         </nav>
         <div className="flex items-center gap-3">
+          <div className="w-28 mr-2 hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           {user && appUser ? (
             <Link
               href={dashboardHref}
               className="flex items-center gap-1.5 bg-[#1D9E75] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#178a63] transition"
             >
-              Dashboard <ArrowRight className="h-3.5 w-3.5" />
+              {t("Dashboard")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           ) : (
             <>
               <Link href="/login" className="text-sm text-slate-600 hover:text-slate-900 transition">
-                Sign in
+                {t("Sign in")}
               </Link>
               <Link
                 href="/login"
                 className="bg-[#1D9E75] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#178a63] transition"
               >
-                Get started
+                {t("Get started")}
               </Link>
             </>
           )}
@@ -77,6 +83,7 @@ function NavBar() {
 }
 
 function StatCard({ value, label }: { value: string; label: string }) {
+  const { t } = useTranslation();
   return (
     <div className="text-center">
       <p className="text-3xl sm:text-4xl font-bold text-[#1D9E75]">{value}</p>
@@ -98,6 +105,7 @@ function StepCard({
   desc: string;
   color: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center text-center gap-4">
       <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${color}`}>
@@ -128,6 +136,7 @@ function AgentCard({
   features: string[];
   color: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className={`h-12 w-12 rounded-xl flex items-center justify-center mb-4 ${color}`}>
@@ -160,6 +169,7 @@ function RoleCard({
   actions: string[];
   href: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 hover:border-[#1D9E75]/30 hover:shadow-md transition-all">
       <div className="h-12 w-12 rounded-xl bg-[#1D9E75]/10 text-[#1D9E75] flex items-center justify-center mb-4">
@@ -188,7 +198,9 @@ function RoleCard({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  return (
+  
+  const { t } = useTranslation();
+return (
     <div className="min-h-screen bg-white">
       <NavBar />
 
@@ -197,14 +209,15 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium px-4 py-1.5 rounded-full mb-6">
             <Zap className="h-3.5 w-3.5" />
-            AI-powered food redistribution · Live in India
+            प्रसादम् · Blessed food, for all · Live in India
           </div>
           <h1 className="text-4xl sm:text-6xl font-bold text-slate-900 leading-tight tracking-tight">
-            Surplus food finds its way{" "}
-            <span className="text-[#1D9E75]">to those who need it</span>
+            Prasādam {" "}
+            <span className="text-[#1D9E75]"> Where Every Meal is Sacred</span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            ZeroHunger connects restaurants with surplus food to NGOs and beneficiaries — automatically,
+            Prasadam — the ancient tradition of sharing sacred food — reimagined for modern India.
+            We connect restaurants with surplus meals to NGOs and beneficiaries,
             in real time, with zero waste and zero friction.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -212,7 +225,7 @@ export default function LandingPage() {
               href="/login"
               className="flex items-center gap-2 bg-[#1D9E75] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#178a63] transition text-base w-full sm:w-auto justify-center"
             >
-              Get started free <ArrowRight className="h-4 w-4" />
+              Offer your Prasadam <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="#how-it-works"
@@ -224,10 +237,10 @@ export default function LandingPage() {
 
           {/* Trust bar */}
           <div className="mt-14 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
-            {["Phone OTP login", "Real-time matching", "Multi-role platform", "Zero-waste mission"].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
+            {[t("Hero.Trust1"), t("Hero.Trust2"), t("Hero.Trust3"), t("Hero.Trust4")].map((trust) => (
+              <span key={trust} className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-[#1D9E75]" />
-                {t}
+                {trust}
               </span>
             ))}
           </div>
@@ -239,7 +252,7 @@ export default function LandingPage() {
             <div className="flex gap-1.5">
               {["bg-red-400","bg-yellow-400","bg-green-400"].map(c=><div key={c} className={`h-3 w-3 rounded-full ${c}`}/>)}
             </div>
-            <span className="text-white/70 text-xs ml-2 font-mono">zerohunger.app — Live flow</span>
+            <span className="text-white/70 text-xs ml-2 font-mono">prasadam.app — Live flow</span>
           </div>
           <div className="p-6 grid grid-cols-3 gap-4">
             {[
@@ -276,10 +289,10 @@ export default function LandingPage() {
       <section id="impact" className="py-16 px-4 sm:px-6 bg-[#1D9E75]">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
-            { value: "10,000+", label: "Meals redistributed" },
-            { value: "< 15 min", label: "Average delivery time" },
-            { value: "200+", label: "Partner restaurants" },
-            { value: "50+", label: "NGOs onboarded" },
+            { value: "10,000+", label: t("Stats.Label1") },
+            { value: "< 15 min", label: t("Stats.Label2") },
+            { value: "200+", label: t("Stats.Label3") },
+            { value: "50+", label: t("Stats.Label4") },
           ].map((s) => (
             <div key={s.label} className="text-center">
               <p className="text-3xl sm:text-4xl font-bold text-white">{s.value}</p>
@@ -294,34 +307,34 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-[#EF9F27] uppercase tracking-widest mb-2">The flow</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">From surplus to served in 4 steps</h2>
-            <p className="text-slate-500 mt-3 text-lg">Fully automated. No calls, no paperwork, no waste.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">From offering to blessing in 4 steps</h2>
+            <p className="text-slate-500 mt-3 text-lg">Fully automated. No calls, no paperwork, no wasted Prasadam.</p>
           </div>
           <div className="relative grid grid-cols-1 md:grid-cols-4 gap-10">
             {[
               {
                 step: "1", icon: <Utensils className="h-7 w-7 text-[#EF9F27]" />,
                 color: "bg-amber-50",
-                title: "Restaurant posts surplus",
-                desc: "Add your leftover food in 30 seconds — quantity, type, expiry time.",
+                title: t("Flow.Step1.Title"),
+                desc: t("Flow.Step1.Desc"),
               },
               {
                 step: "2", icon: <Brain className="h-7 w-7 text-[#1D9E75]" />,
                 color: "bg-emerald-50",
-                title: "AI matches instantly",
-                desc: "The Coordinator agent finds the highest-priority NGO and creates a match.",
+                title: t("Flow.Step2.Title"),
+                desc: t("Flow.Step2.Desc"),
               },
               {
                 step: "3", icon: <Bell className="h-7 w-7 text-blue-500" />,
                 color: "bg-blue-50",
-                title: "One-tap approval",
-                desc: "Restaurant gets notified and approves with a single tap. SLA: 5 minutes.",
+                title: t("Flow.Step3.Title"),
+                desc: t("Flow.Step3.Desc"),
               },
               {
                 step: "4", icon: <Truck className="h-7 w-7 text-violet-500" />,
                 color: "bg-violet-50",
-                title: "Volunteer delivers",
-                desc: "Nearest volunteer is dispatched. Food reaches beneficiaries in under 15 minutes.",
+                title: t("Flow.Step4.Title"),
+                desc: t("Flow.Step4.Desc"),
               },
             ].map((s) => (
               <StepCard key={s.step} {...s} />
@@ -346,74 +359,44 @@ export default function LandingPage() {
             <AgentCard
               icon={<Brain className="h-6 w-6 text-[#1D9E75]" />}
               color="bg-emerald-50"
-              name="Coordinator Agent"
-              role="The central brain"
-              features={[
-                "Routes requests to best supply match",
-                "Manages agent-to-agent messaging",
-                "Handles timeouts and fallback escalation",
-                "Logs every decision with full audit trail",
-              ]}
+              name={t("Agent.Coordinator.Name")}
+              role={t("Agent.Coordinator.Role")}
+              features={[t("Agent.Coordinator.F1"), t("Agent.Coordinator.F2"), t("Agent.Coordinator.F3"), t("Agent.Coordinator.F4")]}
             />
             <AgentCard
               icon={<Utensils className="h-6 w-6 text-amber-500" />}
               color="bg-amber-50"
-              name="Supply Agent"
-              role="Monitors all food listings"
-              features={[
-                "Real-time inventory of all surplus",
-                "Scores listings by expiry and quantity",
-                "Pings restaurant for approval",
-                "Auto-alerts before food expires",
-              ]}
+              name={t("Agent.Supply.Name")}
+              role={t("Agent.Supply.Role")}
+              features={[t("Agent.Supply.F1"), t("Agent.Supply.F2"), t("Agent.Supply.F3"), t("Agent.Supply.F4")]}
             />
             <AgentCard
               icon={<Users className="h-6 w-6 text-blue-500" />}
               color="bg-blue-50"
-              name="Demand Agent"
-              role="Manages NGO requests"
-              features={[
-                "Queues and ranks requests by urgency",
-                "Splits large requests across sources",
-                "Sends confirmation to requesting NGO",
-                "Tracks fulfilment rate per NGO",
-              ]}
+              name={t("Agent.Demand.Name")}
+              role={t("Agent.Demand.Role")}
+              features={[t("Agent.Demand.F1"), t("Agent.Demand.F2"), t("Agent.Demand.F3"), t("Agent.Demand.F4")]}
             />
             <AgentCard
               icon={<Bell className="h-6 w-6 text-violet-500" />}
               color="bg-violet-50"
-              name="Notification Agent"
-              role="Multi-channel comms"
-              features={[
-                "In-app real-time notifications",
-                "WhatsApp for donors & NGOs (Phase 2)",
-                "Voice calls for urgent confirmations",
-                "SMS/USSD for low-data beneficiaries",
-              ]}
+              name={t("Agent.Notification.Name")}
+              role={t("Agent.Notification.Role")}
+              features={[t("Agent.Notification.F1"), t("Agent.Notification.F2"), t("Agent.Notification.F3"), t("Agent.Notification.F4")]}
             />
             <AgentCard
               icon={<Truck className="h-6 w-6 text-teal-500" />}
               color="bg-teal-50"
-              name="Dispatch Agent"
-              role="Volunteer coordination"
-              features={[
-                "Geo-matches volunteer to pickup",
-                "Sends route via WhatsApp",
-                "Live ETA tracking",
-                "Auto-reassigns if volunteer cancels",
-              ]}
+              name={t("Agent.Dispatch.Name")}
+              role={t("Agent.Dispatch.Role")}
+              features={[t("Agent.Dispatch.F1"), t("Agent.Dispatch.F2"), t("Agent.Dispatch.F3"), t("Agent.Dispatch.F4")]}
             />
             <AgentCard
               icon={<ShieldCheck className="h-6 w-6 text-red-500" />}
               color="bg-red-50"
-              name="Escalation Agent"
-              role="Safety net for failures"
-              features={[
-                "Watches SLA timers per workflow step",
-                "Escalates to admin with one-tap actions",
-                "Finds alternative NGO if first declines",
-                "Post-mortem logging for every failure",
-              ]}
+              name={t("Agent.Escalation.Name")}
+              role={t("Agent.Escalation.Role")}
+              features={[t("Agent.Escalation.F1"), t("Agent.Escalation.F2"), t("Agent.Escalation.F3"), t("Agent.Escalation.F4")]}
             />
           </div>
         </div>
@@ -429,30 +412,30 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <RoleCard
               icon={<Utensils className="h-5 w-5" />}
-              title="Restaurant"
-              desc="Turn your daily surplus into impact. Takes 30 seconds to post."
-              actions={["Post surplus in 30s", "One-tap approve requests", "Track your donations"]}
+              title={t("Role.Restaurant.Title")}
+              desc={t("Role.Restaurant.Desc")}
+              actions={[t("Role.Restaurant.A1"), t("Role.Restaurant.A2"), t("Role.Restaurant.A3")]}
               href="/login"
             />
             <RoleCard
               icon={<Heart className="h-5 w-5" />}
-              title="NGO"
-              desc="Request food for your beneficiaries and get matched instantly."
-              actions={["Submit food requests", "Track live deliveries", "View fulfilment history"]}
+              title={t("Role.NGO.Title")}
+              desc={t("Role.NGO.Desc")}
+              actions={[t("Role.NGO.A1"), t("Role.NGO.A2"), t("Role.NGO.A3")]}
               href="/login"
             />
             <RoleCard
               icon={<Truck className="h-5 w-5" />}
-              title="Volunteer"
-              desc="Pick up and deliver food on your schedule. See open pickups nearby."
-              actions={["Accept open deliveries", "Navigate with Google Maps", "Build impact streak"]}
+              title={t("Role.Volunteer.Title")}
+              desc={t("Role.Volunteer.Desc")}
+              actions={[t("Role.Volunteer.A1"), t("Role.Volunteer.A2"), t("Role.Volunteer.A3")]}
               href="/login"
             />
             <RoleCard
               icon={<Brain className="h-5 w-5" />}
-              title="Admin"
-              desc="Monitor the whole network. Resolve escalations, view analytics."
-              actions={["Live escalation console", "Unmatched request queue", "System health overview"]}
+              title={t("Role.Admin.Title")}
+              desc={t("Role.Admin.Desc")}
+              actions={[t("Role.Admin.A1"), t("Role.Admin.A2"), t("Role.Admin.A3")]}
               href="/login"
             />
           </div>
@@ -465,14 +448,16 @@ export default function LandingPage() {
           <div className="inline-flex h-14 w-14 rounded-2xl bg-white/10 items-center justify-center mb-6">
             <Leaf className="h-7 w-7 text-white" />
           </div>
+          <p className="text-white/80 text-sm font-semibold uppercase tracking-widest mb-4">Our Mission</p>
           <blockquote className="text-2xl sm:text-3xl font-medium text-white leading-relaxed">
-            "1/3 of all food produced globally is wasted — while 800 million people go hungry every day.
-            We built ZeroHunger to close that gap, one meal at a time."
+            "In our tradition, Prasadam is never wasted — it is always shared.
+            We built this platform to carry that spirit into every city in India,
+            turning restaurant surplus into someone's most important meal of the day."
           </blockquote>
           <div className="mt-8 flex items-center justify-center gap-1">
             {[1,2,3,4,5].map(i => <Star key={i} className="h-5 w-5 fill-[#EF9F27] text-[#EF9F27]" />)}
           </div>
-          <p className="text-white/60 text-sm mt-2">ZeroHunger Mission Statement</p>
+          <p className="text-white/60 text-sm mt-2">Prasadam · प्रसादम् · Blessed food for all</p>
         </div>
       </section>
 
@@ -480,18 +465,19 @@ export default function LandingPage() {
       <section className="py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-            Ready to end food waste in your city?
+            Be part of India's largest<br />food sharing movement
           </h2>
           <p className="text-slate-500 mt-4 text-lg">
-            Join restaurants, NGOs, and volunteers already using ZeroHunger.
-            Sign up in 60 seconds — just your phone number.
+            Every restaurant has surplus. Every NGO has need. Prasadam bridges the gap —
+            automatically, respectfully, and in the true spirit of giving.
+            Join in 60 seconds, just your phone number.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/login"
               className="flex items-center gap-2 bg-[#1D9E75] text-white font-semibold px-8 py-3.5 rounded-2xl hover:bg-[#178a63] transition text-base w-full sm:w-auto justify-center"
             >
-              Start for free <ArrowRight className="h-4 w-4" />
+              Join the movement <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/login"
@@ -513,10 +499,10 @@ export default function LandingPage() {
             <div className="h-7 w-7 rounded-lg bg-[#1D9E75] flex items-center justify-center">
               <Leaf className="h-3.5 w-3.5 text-white" />
             </div>
-            ZeroHunger
+            Prasadam
           </div>
           <p className="text-sm text-slate-400 text-center">
-            Built with Next.js · Firebase · Claude AI · Deployed with love
+            प्रसादम् · Built with Next.js, Firebase & Claude AI · Made in India with love
           </p>
           <div className="flex items-center gap-4 text-sm text-slate-500">
             <Link href="/login" className="hover:text-slate-900 transition">Sign in</Link>
