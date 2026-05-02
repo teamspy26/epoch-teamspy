@@ -26,7 +26,7 @@ import toast from "react-hot-toast";
 import { handleAdminVoiceIntent } from "@/lib/services/voice-intent-handlers";
 import { VoiceIntentResult } from "@/lib/services/sarvam-ai";
 import { useTranslation } from "@/context/language-context";
-import { VoiceAssistant as VoiceButton } from "@/components/voice-assistant";
+import { VoiceButton } from "@/components/voice-button";
 
 const escalationLabels: Record<string, string> = {
   no_restaurant_response: "Restaurant no response",
@@ -60,6 +60,8 @@ export default function AdminDashboard() {
   const [escalations, setEscalations] = useState<Escalation[]>([
     {
       id: "esc_1",
+      type: "no_restaurant_response",
+      entityId: "match_abc",
       reason: "no_restaurant_response",
       requestId: "req_abc",
       listingId: "list_xyz",
@@ -69,6 +71,8 @@ export default function AdminDashboard() {
     },
     {
       id: "esc_2",
+      type: "volunteer_no_show",
+      entityId: "del_123",
       reason: "volunteer_no_show",
       deliveryId: "del_123",
       status: "open",
@@ -84,32 +88,28 @@ export default function AdminDashboard() {
       agent: "coordinator",
       action: "match_found",
       timestamp: Timestamp.fromMillis(Date.now() - 5 * 60 * 1000),
-      decision: "Matched NGO 'Good Works' with 'Pizza Place' for 20 servings.",
-      durationMs: 150,
+      context: { reasoning: "Matched NGO 'Good Works' with 'Pizza Place' for 20 servings." },
     },
     {
       id: "log_2",
       agent: "dispatch",
       action: "volunteer_assigned",
       timestamp: Timestamp.fromMillis(Date.now() - 10 * 60 * 1000),
-      decision: "Assigned delivery 'del_456' to volunteer 'Sunita P'.",
-      durationMs: 80,
+      context: { reasoning: "Assigned delivery 'del_456' to volunteer 'Sunita P'." },
     },
     {
       id: "log_3",
       agent: "supply",
       action: "score_listing",
       timestamp: Timestamp.fromMillis(Date.now() - 12 * 60 * 1000),
-      decision: "Scored new listing 'list_pqr' with a high relevance of 0.92.",
-      durationMs: 220,
+      context: { reasoning: "Scored new listing 'list_pqr' with a high relevance of 0.92." },
     },
     {
       id: "log_4",
       agent: "escalation",
       action: "create_escalation",
       timestamp: Timestamp.fromMillis(Date.now() - 30 * 60 * 1000),
-      decision: "Created escalation for non-responsive restaurant 'Tasty Bites'.",
-      durationMs: 50,
+      context: { reasoning: "Created escalation for non-responsive restaurant 'Tasty Bites'." },
     },
   ]);
   const [resolving, setResolving] = useState<string | null>(null);
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
                         {escalationLabels[esc.type] ?? esc.type}
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Attempts: {esc.attempts} · {formatTimestamp(esc.createdAt)}
+                        {formatTimestamp(esc.createdAt)}
                       </p>
                     </div>
                     <StatusBadge status={esc.status} />

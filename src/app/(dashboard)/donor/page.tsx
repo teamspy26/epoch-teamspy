@@ -21,13 +21,7 @@ import { getFirestore, doc, updateDoc } from "firebase/firestore";
 const langMap: Record<string, string> = {
   en: "en-IN", kn: "kn-IN", hi: "hi-IN", te: "te-IN", ta: "ta-IN",
 };
-interface VoiceIntentResult {
-  intent: string;
-  confidence: number;
-  parameters: Record<string, unknown>;
-  rawTranscript: string;
-  response?: string;
-}
+
 
 type ScanResult = {
   safe: boolean;
@@ -137,7 +131,7 @@ export default function DonorDashboard() {
         totalServings: result.estimatedServings,
         expiryTime: Timestamp.fromDate(new Date(Date.now() + 4 * 60 * 60 * 1000)),
         address: address.trim(),
-        status: "available",
+        status: "available" as const,
         notes: `Individual donor. Freshness: ${result.freshness}. Category: ${result.category}.`,
         // imageUrl will be added later
       };
@@ -201,13 +195,10 @@ export default function DonorDashboard() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  function handleVoiceIntent(result: VoiceIntentResult) {
-    // Handle voice commands for donor dashboard
-    if (result.intent === "approve_match" || result.intent === "accept_delivery") {
-      // Trigger donation if result is ready
-      if (result && !donated) {
-        handleDonate();
-      }
+  function handleVoiceIntent(text: string) {
+    const lower = text.toLowerCase();
+    if (lower.includes("donate") || lower.includes("submit") || lower.includes("confirm")) {
+      if (!donated) handleDonate();
     }
   }
 

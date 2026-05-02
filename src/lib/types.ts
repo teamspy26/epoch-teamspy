@@ -128,13 +128,19 @@ export interface Delivery {
 export interface Escalation {
   id: string;
   type: EscalationType;
-  entityId: string; // e.g., matchId, deliveryId
+  entityId: string;
   details: string;
-  status: "open" | "in_progress" | "resolved";
-  assignedTo?: string; // admin user ID
+  reason: string;
+  status: "open" | "in_progress" | "resolved" | "escalated_to_admin";
+  assignedTo?: string;
+  adminNote?: string;
+  resolvedBy?: string;
+  requestId?: string;
+  matchId?: string;
+  listingId?: string;
+  deliveryId?: string;
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
-  reason: string; // Add the missing reason property
 }
 
 export interface AgentMessage {

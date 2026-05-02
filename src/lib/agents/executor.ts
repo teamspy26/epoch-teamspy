@@ -15,10 +15,16 @@ import {
   updateRequest,
   updateListing,
   updateDelivery,
-  getMatchById,
   COLLECTIONS,
 } from "@/lib/firebase/db";
 import { db } from "@/lib/firebase/config";
+import { sendWhatsApp } from "@/lib/whatsapp";
+import {
+  sendEmail,
+  buildRestaurantMatchEmail,
+  buildMatchFoundEmail,
+  buildVolunteerAssignedEmail,
+} from "@/lib/email";
 
 const SLA_MINUTES = 5;
 
@@ -76,7 +82,7 @@ export async function executeTool(
         updateRequest(requestId, { status: "matched" }),
       ]);
 
-      // Notify restaurant
+      // In-app: notify restaurant
       await createNotification({
         userId: listing.restaurantId,
         title: "Food request matched! 🙏",
@@ -86,7 +92,7 @@ export async function executeTool(
         metadata: { matchId, requestId, listingId },
       });
 
-      // Notify NGO
+      // In-app: notify NGO
       await createNotification({
         userId: request.ngoId,
         title: "Match found!",
@@ -95,6 +101,59 @@ export async function executeTool(
         read: false,
         metadata: { matchId },
       });
+
+      // WhatsApp: targeted approval request to the matched restaurant
+      if (listing.restaurantPhone) {
+        sendWhatsApp(
+          listing.restaurantPhone,
+          `🍽️ Prasadam: You've been matched!\n${request.ngoName} needs ${request.servingsNeeded} servings for ${request.beneficiaryCount} people.\nPlease open the app and APPROVE within ${SLA_MINUTES} minutes to help feed people today. 🙏`
+        ).catch(() => {});
+      }
+
+      // WhatsApp: notify NGO that a match was found and is pending approval
+      if (request.ngoPhone) {
+        sendWhatsApp(
+          request.ngoPhone,
+          `✨ Prasadam: Great news! We matched your request with ${listing.restaurantName} (${listing.totalServings} servings available). Waiting for their approval — we'll notify you the moment they confirm! 🙏`
+        ).catch(() => {});
+      }
+
+      // Email: restaurant + NGO (non-blocking, fetch user emails)
+      const { getDoc: gd, doc: d } = await import("firebase/firestore");
+      Promise.all([
+        gd(d(db, COLLECTIONS.USERS, listing.restaurantId)),
+        gd(d(db, COLLECTIONS.USERS, request.ngoId)),
+      ]).then(([restaurantUserSnap, ngoUserSnap]) => {
+        const restaurantEmail = restaurantUserSnap.data()?.email as string | undefined;
+        const ngoEmail = ngoUserSnap.data()?.email as string | undefined;
+
+        if (restaurantEmail) {
+          sendEmail({
+            to: restaurantEmail,
+            subject: `🍽️ New Food Request Matched to You — Prasadam`,
+            html: buildRestaurantMatchEmail({
+              restaurantName: listing.restaurantName,
+              ngoName: request.ngoName,
+              servingsNeeded: request.servingsNeeded,
+              beneficiaryCount: request.beneficiaryCount,
+              urgency: request.urgency,
+              slaMinutes: SLA_MINUTES,
+            }),
+          });
+        }
+
+        if (ngoEmail) {
+          sendEmail({
+            to: ngoEmail,
+            subject: `✨ Match Found for Your Food Request — Prasadam`,
+            html: buildMatchFoundEmail({
+              ngoName: request.ngoName,
+              restaurantName: listing.restaurantName,
+              servingsAvailable: listing.totalServings,
+            }),
+          });
+        }
+      }).catch((e) => console.error("[executor] email user fetch failed:", e));
 
       await logAgentDecision("coordinator", "match_created", {
         matchId,
@@ -142,6 +201,27 @@ export async function executeTool(
         metadata: { deliveryId },
       });
 
+      // Email volunteer if they have an email
+      if (volunteer.email) {
+        const delivery = deliverySnap.data();
+        const { getDoc: gd2, doc: d2 } = await import("firebase/firestore");
+        gd2(d2(db, COLLECTIONS.LISTINGS, delivery.listingId)).then((listingSnap) => {
+          const listing = listingSnap.data();
+          sendEmail({
+            to: volunteer.email as string,
+            subject: `🚴 New Delivery Assigned — Prasadam`,
+            html: buildVolunteerAssignedEmail({
+              volunteerName: volunteer.name,
+              restaurantName: listing?.restaurantName ?? "Restaurant",
+              pickupAddress: delivery.pickupAddress,
+              ngoName: delivery.dropAddress,
+              dropAddress: delivery.dropAddress,
+              servings: listing?.totalServings ?? 0,
+            }),
+          });
+        }).catch((e) => console.error("[executor] volunteer email failed:", e));
+      }
+
       await logAgentDecision("dispatch", "volunteer_assigned", {
         deliveryId,
         volunteerId,
@@ -160,9 +240,10 @@ export async function executeTool(
 
       const escalationId = await createEscalation({
         type: type as Parameters<typeof createEscalation>[0]["type"],
+        entityId: (context.matchId ?? context.deliveryId ?? context.requestId ?? "unknown") as string,
+        details: strategy,
+        reason: type,
         status: "open",
-        attempts: 1,
-        context: { ...context, aiStrategy: strategy },
         matchId: context.matchId as string | undefined,
         deliveryId: context.deliveryId as string | undefined,
       });

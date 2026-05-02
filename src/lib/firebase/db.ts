@@ -58,6 +58,17 @@ export async function getUser(uid: string): Promise<AppUser | null> {
   return s.exists() ? ({ uid: s.id, ...s.data() } as AppUser) : null;
 }
 
+export async function getUsersByRole(role: AppUser["role"]): Promise<AppUser[]> {
+  const q = query(collection(db, COLLECTIONS.USERS), where("role", "==", role));
+  const snapshot = await getDocs(q);
+  return snap<AppUser>(snapshot);
+}
+
+export async function updateUser(uid: string, data: Partial<Omit<AppUser, "uid" | "createdAt">>) {
+  const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+  await updateDoc(doc(db, COLLECTIONS.USERS, uid), clean as DocumentData);
+}
+
 export async function createUser(uid: string, data: Omit<AppUser, "uid" | "createdAt">) {
   // Strip undefined fields — Firestore rejects them
   const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));

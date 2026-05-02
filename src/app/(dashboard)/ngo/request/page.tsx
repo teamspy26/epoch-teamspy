@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp, GeoPoint } from "firebase/firestore";
 import { useAuth } from "@/context/auth-context";
 import { createRequest } from "@/lib/firebase/db";
 import { urgencyPriority } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { VoiceInput } from "@/components/voice-input";
+import { LocationPicker } from "@/components/location-picker";
 import { useTranslation } from "@/context/language-context";
 import { ArrowLeft, Utensils } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,7 @@ export default function RequestFoodPage() {
   const [beneficiaries, setBeneficiaries] = useState("");
   const [urgency, setUrgency] = useState<UrgencyLevel>("medium");
   const [address, setAddress] = useState("");
+  const [gpsLocation, setGpsLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [notes, setNotes] = useState("");
   const [neededInHours, setNeededInHours] = useState("4");
   const [loading, setLoading] = useState(false);
@@ -61,6 +63,7 @@ export default function RequestFoodPage() {
         servingsNeeded: servingsNum,
         urgency,
         address,
+        location: gpsLocation ? new GeoPoint(gpsLocation.latitude, gpsLocation.longitude) : undefined,
         status: "pending",
         priority,
         notes: notes || undefined,
@@ -146,18 +149,14 @@ export default function RequestFoodPage() {
               <option value="24">Tomorrow</option>
             </Select>
 
-            <div className="flex flex-col gap-1.5">
-              <Input
-                label={`${t("Form.PickupAddress")} *`}
-                placeholder="Full address where food should be delivered"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <VoiceInput
-                languageCode={langMap[language] ?? "en-IN"}
-                onTranscript={(text) => setAddress((prev) => prev ? `${prev} ${text}` : text)}
-              />
-            </div>
+            <LocationPicker
+              label={`${t("Form.PickupAddress")} *`}
+              placeholder="Full address where food should be delivered"
+              required
+              value={address}
+              onChange={setAddress}
+              onLocationSelect={(r) => setGpsLocation({ latitude: r.latitude, longitude: r.longitude })}
+            />
 
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700">{t("Form.Notes")}</label>

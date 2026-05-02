@@ -4,7 +4,9 @@ import { AGENT_TOOLS } from "@/lib/agents/tools";
 import { executeTool } from "@/lib/agents/executor";
 import { db } from "@/lib/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
-import { COLLECTIONS } from "@/lib/firebase/db";
+import { COLLECTIONS, getUsersByRole } from "@/lib/firebase/db";
+import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendEmail, buildRestaurantBroadcastEmail } from "@/lib/email";
 import type { FoodRequest } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,39 @@ export async function POST(req: NextRequest) {
     if (!snap.exists()) return NextResponse.json({ error: "Request not found" }, { status: 404 });
 
     const request = { id: snap.id, ...snap.data() } as FoodRequest;
+
+    // Broadcast to all registered restaurants + donors — WhatsApp + email
+    Promise.all([
+      getUsersByRole("restaurant"),
+      getUsersByRole("donor"),
+    ]).then(([restaurants, donors]) => {
+      const suppliers = [...restaurants, ...donors];
+      const broadcastEmailHtml = buildRestaurantBroadcastEmail({
+        ngoName: request.ngoName,
+        servingsNeeded: request.servingsNeeded,
+        beneficiaryCount: request.beneficiaryCount,
+        urgency: request.urgency,
+        address: request.address,
+      });
+
+      suppliers.forEach((s) => {
+        // WhatsApp
+        if (s.phone) {
+          sendWhatsApp(
+            s.phone,
+            `🍱 Prasadam Alert: ${request.ngoName} needs ${request.servingsNeeded} servings for ${request.beneficiaryCount} people (Urgency: ${request.urgency}). Do you have surplus food to donate? Open the app now to help! 🙏`
+          ).catch(() => {});
+        }
+        // Email
+        if (s.email) {
+          sendEmail({
+            to: s.email,
+            subject: `🍱 Food Needed Nearby — ${request.ngoName} needs ${request.servingsNeeded} servings`,
+            html: broadcastEmailHtml,
+          });
+        }
+      });
+    }).catch((e) => console.error("[Coordinator] broadcast failed:", e));
 
     const systemPrompt = `You are the Coordinator Agent for Prasadam, an AI-powered food redistribution platform in India.
 Your job: match a food request from an NGO to the best available surplus food listing.

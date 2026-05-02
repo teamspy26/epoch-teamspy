@@ -10,7 +10,7 @@ import {
   User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
-import { getUser, createUser } from "@/lib/firebase/db";
+import { getUser, createUser, updateUser } from "@/lib/firebase/db";
 import type { AppUser, UserRole } from "@/lib/types";
 
 interface AuthContextValue {
@@ -18,10 +18,9 @@ interface AuthContextValue {
   appUser: AppUser | null;
   loading: boolean;
   sendOtp: (phone: string) => Promise<ConfirmationResult>;
-  // Returns whether the user already has a profile
   confirmOtp: (result: ConfirmationResult, otp: string) => Promise<{ hasProfile: boolean }>;
-  // Called after confirmOtp when no profile exists yet
   createProfile: (role: UserRole, name: string, orgName?: string, email?: string) => Promise<void>;
+  updateProfile: (data: Partial<Omit<AppUser, "uid" | "createdAt">>) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -92,6 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAppUser(profile);
   }
 
+  async function updateProfile(data: Partial<Omit<AppUser, "uid" | "createdAt">>) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("Not authenticated");
+    await updateUser(currentUser.uid, data);
+    const profile = await getUser(currentUser.uid);
+    setAppUser(profile);
+  }
+
   async function signOut() {
     await firebaseSignOut(auth);
     setUser(null);
@@ -99,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, appUser, loading, sendOtp, confirmOtp, createProfile, signOut }}>
+    <AuthContext.Provider value={{ user, appUser, loading, sendOtp, confirmOtp, createProfile, updateProfile, signOut }}>
       {children}
     </AuthContext.Provider>
   );

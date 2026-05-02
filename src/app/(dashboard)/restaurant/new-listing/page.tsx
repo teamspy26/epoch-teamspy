@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp, GeoPoint } from "firebase/firestore";
 import { useAuth } from "@/context/auth-context";
 import { createListing, getPendingRequests } from "@/lib/firebase/db";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { ArrowLeft, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { FoodItem } from "@/lib/types";
+import { LocationPicker } from "@/components/location-picker";
 import { VoiceInput } from "@/components/voice-input";
 import { useTranslation } from "@/context/language-context";
 
@@ -28,6 +29,7 @@ export default function NewListingPage() {
   const [totalServings, setTotalServings] = useState("");
   const [expiryHours, setExpiryHours] = useState("4");
   const [address, setAddress] = useState(appUser?.address ?? "");
+  const [gpsLocation, setGpsLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -68,6 +70,7 @@ export default function NewListingPage() {
         totalServings: parseInt(totalServings),
         expiryTime,
         address,
+        location: gpsLocation ? new GeoPoint(gpsLocation.latitude, gpsLocation.longitude) : undefined,
         status: "available",
         notes: notes || undefined,
       });
@@ -186,18 +189,14 @@ export default function NewListingPage() {
               <option value="24">24 hours</option>
             </Select>
 
-            <div className="flex flex-col gap-1.5">
-              <Input
-                label={`${t("Form.PickupAddress")} *`}
-                placeholder="Your restaurant address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <VoiceInput
-                languageCode={langMap[language] ?? "en-IN"}
-                onTranscript={(text) => setAddress((prev) => prev ? `${prev} ${text}` : text)}
-              />
-            </div>
+            <LocationPicker
+              label={`${t("Form.PickupAddress")} *`}
+              placeholder="Your restaurant address"
+              required
+              value={address}
+              onChange={setAddress}
+              onLocationSelect={(r) => setGpsLocation({ latitude: r.latitude, longitude: r.longitude })}
+            />
 
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-slate-700">{t("Form.Notes")}</label>

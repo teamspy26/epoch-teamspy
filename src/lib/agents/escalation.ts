@@ -6,12 +6,9 @@
 import {
   createEscalation,
   updateEscalation,
-  updateMatch,
-  updateListing,
   updateRequest,
   createNotification,
   logAgentDecision,
-  getOpenEscalations,
 } from "@/lib/firebase/db";
 import type { EscalationType, FoodRequest } from "@/lib/types";
 
@@ -19,11 +16,17 @@ export async function runEscalationAgent(
   type: EscalationType,
   context: Record<string, unknown>
 ): Promise<void> {
+  const entityId = (
+    context.matchId ?? context.deliveryId ?? context.requestId ?? "unknown"
+  ) as string;
+
   const escalationId = await createEscalation({
     type,
+    entityId,
+    details: `Escalation triggered: ${type}`,
+    reason: type,
     status: "open",
-    attempts: 1,
-    context,
+    requestId: context.requestId as string | undefined,
     matchId: context.matchId as string | undefined,
     deliveryId: context.deliveryId as string | undefined,
   });
@@ -65,7 +68,7 @@ async function handleNoRestaurantResponse(
     metadata: { escalationId, requestId: request.id },
   });
 
-  await updateEscalation(escalationId, { status: "escalated_to_admin", attempts: 2 });
+  await updateEscalation(escalationId, { status: "escalated_to_admin" });
 
   await logAgentDecision("escalation", "no_response_requeued", {
     escalationId,
@@ -96,7 +99,7 @@ async function handleVolunteerNoShow(
     metadata: { escalationId, deliveryId },
   });
 
-  await updateEscalation(escalationId, { status: "escalated_to_admin", attempts: 2 });
+  await updateEscalation(escalationId, { status: "escalated_to_admin" });
 }
 
 async function handleFoodExpiring(escalationId: string, context: Record<string, unknown>) {
@@ -112,7 +115,7 @@ async function handleFoodExpiring(escalationId: string, context: Record<string, 
     metadata: { escalationId, listingId },
   });
 
-  await updateEscalation(escalationId, { status: "open", attempts: 2 });
+  await updateEscalation(escalationId, { status: "open" });
 }
 
 async function handleQualityFail(escalationId: string, context: Record<string, unknown>) {
@@ -127,5 +130,5 @@ async function handleQualityFail(escalationId: string, context: Record<string, u
     metadata: { escalationId, deliveryId },
   });
 
-  await updateEscalation(escalationId, { status: "escalated_to_admin", attempts: 1 });
+  await updateEscalation(escalationId, { status: "escalated_to_admin" });
 }

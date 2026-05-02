@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { NavBar } from "@/components/nav-bar";
 import { VoiceAssistant } from "@/components/voice-assistant";
+import { EmailPromptModal } from "@/components/email-prompt-modal";
 
 const roleHomePaths: Record<string, string> = {
   ngo: "/ngo",
@@ -43,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <NavBar />
       <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
       <VoiceAssistant />
+      <EmailPromptModal />
     </div>
   );
 }

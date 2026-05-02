@@ -13,6 +13,7 @@ import {
   createNotification,
   logAgentDecision,
   getRequestById,
+  getUsersByRole,
 } from "@/lib/firebase/db";
 import { db } from "@/lib/firebase/config";
 import { COLLECTIONS } from "@/lib/firebase/db";
@@ -50,7 +51,7 @@ export async function runDispatchAgent(match: Match): Promise<string | null> {
   await updateMatch(match.id, { status: "dispatched" });
   await updateRequest(match.requestId, { status: "dispatched" });
 
-  // Broadcast to all volunteers (open delivery)
+  // In-app broadcast to all volunteers
   await createNotification({
     userId: "broadcast_volunteer",
     title: "New pickup available!",
@@ -59,6 +60,18 @@ export async function runDispatchAgent(match: Match): Promise<string | null> {
     read: false,
     metadata: { deliveryId, matchId: match.id },
   });
+
+  // WhatsApp broadcast to every registered volunteer
+  getUsersByRole("volunteer").then((volunteers) => {
+    volunteers.forEach((v) => {
+      if (v.phone) {
+        sendWhatsApp(
+          v.phone,
+          `🚴 Prasadam: New delivery available!\nPickup: ${listing.address}\nDrop: ${request.address}\nOpen the app to accept. 🙏`
+        ).catch(() => {});
+      }
+    });
+  }).catch(() => {});
 
   await logAgentDecision("dispatch", "delivery_created", { deliveryId, matchId: match.id });
 
