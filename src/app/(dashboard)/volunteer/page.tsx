@@ -37,9 +37,9 @@ function DeliveryCard({
   volunteerPhone?: string;
 }) {
   const [loading, setLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false); // State to toggle map visibility
   const eta = useDeliveryETA(
-    isOwn && delivery.status !== "delivered" ? delivery.pickupAddress : undefined,
-    isOwn && delivery.status !== "delivered" ? delivery.dropAddress : undefined
+    isOwn && delivery.status !== "delivered" ? delivery.id : null
   );
 
   const nextStatus: Record<string, Delivery["status"]> = {
@@ -115,48 +115,59 @@ function DeliveryCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-      <div className="flex justify-between items-start mb-3">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+      <div className="flex justify-between items-start">
         <StatusBadge status={delivery.status} />
         <span className="text-xs text-slate-400">{formatTimestamp(delivery.createdAt)}</span>
       </div>
-      <div className="space-y-2 mb-4">
+      
+      <div>
         <div className="flex items-start gap-2">
           <div className="mt-1 h-2 w-2 rounded-full bg-[#EF9F27] flex-shrink-0" />
-          <p className="text-sm text-slate-700">{delivery.pickupAddress}</p>
+          <div>
+            <p className="text-xs text-slate-500">Pickup</p>
+            <p className="text-sm text-slate-700 font-medium">{delivery.pickupAddress}</p>
+          </div>
+        </div>
+        <div className="pl-3">
+          <div className="h-4 w-px bg-slate-200 ml-px" />
         </div>
         <div className="flex items-start gap-2">
           <div className="mt-1 h-2 w-2 rounded-full bg-[#1D9E75] flex-shrink-0" />
-          <p className="text-sm text-slate-700">{delivery.dropAddress}</p>
-        </div>
-        {/* ETA row */}
-        {isOwn && delivery.status !== "delivered" && (
-          <div className="flex items-center gap-3 mt-1 pt-2 border-t border-slate-100">
-            {eta.loading ? (
-              <span className="text-xs text-slate-400">Calculating route…</span>
-            ) : eta.error ? null : (
-              <>
-                <span className="flex items-center gap-1 text-xs font-medium text-[#1D9E75]">
-                  <Clock className="h-3.5 w-3.5" />
-                  {eta.duration}
-                </span>
-                <span className="flex items-center gap-1 text-xs text-slate-500">
-                  <Navigation className="h-3.5 w-3.5" />
-                  {eta.distance}
-                </span>
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(delivery.pickupAddress)}&destination=${encodeURIComponent(delivery.dropAddress)}&travelmode=driving`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-auto text-xs text-blue-600 hover:underline"
-                >
-                  Open in Maps →
-                </a>
-              </>
-            )}
+          <div>
+            <p className="text-xs text-slate-500">Drop-off</p>
+            <p className="text-sm text-slate-700 font-medium">{delivery.dropAddress}</p>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* ETA and Map toggle */}
+      {isOwn && delivery.status !== "delivered" && (
+        <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+          {eta && (
+            <span className="flex items-center gap-1 text-xs font-medium text-[#1D9E75]">
+              <Clock className="h-3.5 w-3.5" />
+              ETA: {eta}
+            </span>
+          )}
+          <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs" onClick={() => setShowMap(!showMap)}>
+            <Navigation className="h-3.5 w-3.5 mr-1" />
+            {showMap ? "Hide Map" : "Show Route"}
+          </Button>
+        </div>
+      )}
+
+      {/* Map View */}
+      {showMap && delivery.pickupLocation && delivery.dropLocation && (
+        <div className="pt-2">
+          <MapComponent
+            origin={delivery.pickupLocation}
+            destination={delivery.dropLocation}
+            height="250px"
+          />
+        </div>
+      )}
+
 
       {/* Quality check UI — shown after pickup */}
       {isOwn && delivery.status === "picked_up" && (

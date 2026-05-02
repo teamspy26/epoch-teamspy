@@ -113,6 +113,8 @@ export interface Delivery {
   volunteerPhone?: string;
   pickupAddress: string;
   dropAddress: string;
+  pickupLocation?: { lat: number; lng: number };
+  dropLocation?: { lat: number; lng: number };
   status: DeliveryStatus;
   estimatedETA?: number;
   foodPhotoUrl?: string;

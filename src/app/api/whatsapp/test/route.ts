@@ -8,6 +8,12 @@ export async function GET() {
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const accessToken = process.env.WHATSAPP_API_KEY;
 
+  // Log the key to the server console for debugging
+  console.log("--- WhatsApp Test API ---");
+  console.log("Using WHATSAPP_API_KEY:", accessToken ? `...${accessToken.slice(-8)}` : "Not Set");
+  console.log("Using WHATSAPP_PHONE_NUMBER_ID:", phoneNumberId);
+  console.log("-------------------------");
+
   if (!phoneNumberId || !accessToken) {
     return NextResponse.json(
       { success: false, reason: "WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_API_KEY not set in .env.local" },

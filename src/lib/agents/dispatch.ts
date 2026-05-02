@@ -41,6 +41,9 @@ export async function runDispatchAgent(match: Match): Promise<string | null> {
     listingId: match.listingId,
     pickupAddress: listing.address,
     dropAddress: request.address,
+    // Also copy GeoPoints if they exist for routing
+    ...(listing.location && { pickupLocation: { lat: listing.location.latitude, lng: listing.location.longitude } }),
+    ...(request.location && { dropLocation: { lat: request.location.latitude, lng: request.location.longitude } }),
     status: "finding_volunteer",
   });
 
