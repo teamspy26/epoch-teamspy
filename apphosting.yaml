@@ -1,0 +1,115 @@
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  maxInstances: 10
+  minInstances: 0
+  concurrency: 80
+
+env:
+  # ── Firebase client config (public, baked into client bundle) ─────────────
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBkduqON34ek0TX4-MplCPXfFwHB1XD3jo
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: zero-hunger-e0a1c.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: zero-hunger-e0a1c
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: zero-hunger-e0a1c.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "298577675039"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:298577675039:web:36e6be23ee04d26134262a
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-36VBLT77BS
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    value: AIzaSyDIXHY5NUerPNqlJfG9DSRFsgy7i6zPryw
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # ── Non-sensitive runtime values ──────────────────────────────────────────
+  - variable: WHATSAPP_PHONE_NUMBER_ID
+    value: "1060263027178971"
+    availability:
+      - RUNTIME
+
+  - variable: NGO_PHONE_NUMBERS
+    value: "8904030441"
+    availability:
+      - RUNTIME
+
+  - variable: EXOTEL_SID
+    value: appsetz1
+    availability:
+      - RUNTIME
+
+  # ── Base URL — update after first deploy with your actual Firebase URL ─────
+  - variable: NEXT_PUBLIC_BASE_URL
+    secret: NEXT_PUBLIC_BASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # ── Secrets (stored in Firebase Secret Manager) ───────────────────────────
+  - variable: GMAIL_USER
+    secret: GMAIL_USER
+    availability:
+      - RUNTIME
+
+  - variable: GMAIL_APP_PASSWORD
+    secret: GMAIL_APP_PASSWORD
+    availability:
+      - RUNTIME
+
+  - variable: WHATSAPP_API_KEY
+    secret: WHATSAPP_API_KEY
+    availability:
+      - RUNTIME
+
+  - variable: SARVAM_API_KEY
+    secret: SARVAM_API_KEY
+    availability:
+      - RUNTIME
+
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+    availability:
+      - RUNTIME
+
+  - variable: EXOTEL_API_KEY
+    secret: EXOTEL_API_KEY
+    availability:
+      - RUNTIME
+
+  - variable: EXOTEL_API_TOKEN
+    secret: EXOTEL_API_TOKEN
+    availability:
+      - RUNTIME
